@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
       }
       else
       {
-	      cerr << "Invalid number of arguments provided.";
+	cerr << "Invalid number of arguments provided.";
         exit(EXIT_FAILURE);
       }
     }
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
         generateBox(fp, length, height, width, divisions)
         fp.close();
       }
-      else perror("Invalid number of arguments provided.");
+      else cerr << ("Invalid number of arguments provided.");
       exit(EXIT_FAILURE);
     }
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]){
         generateSphere(fp, radius, slices, stacks);
         fp.close();
       }
-      else perror("Invalid number of arguments provided.");
+      else cerr << ("Invalid number of arguments provided.");
       exit(EXIT_FAILURE);
     }
 
@@ -65,10 +65,10 @@ int main(int argc, char* argv[]){
         generateCone(fp, radius, height, slices, stacks);
         fp.close();
       }
-      else perror("Invalid number of arguments provided.");
+      else cerr << ("Invalid number of arguments provided.");
       exit(EXIT_FAILURE);
     }
-    else perror("Available graphical primitives: plane box sphere cone");
+    else cerr << ("Available graphical primitives: plane box sphere cone");
     exit(EXIT_FAILURE);
   }
   return 0;

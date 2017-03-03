@@ -20,6 +20,7 @@ if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 endif(NOT OPENGL_FOUND)
 
-add_executable(${PROJECT_NAME} main.cpp tinyxml2.cpp tinyxml2.h)
+add_executable(${PROJECT_NAME} engine.cpp engine.h tinyxml2.cpp tinyxml2.h)
+add_executable(generator interpreter.cpp generator.h generator.cpp)
 
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )

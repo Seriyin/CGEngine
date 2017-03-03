@@ -1,11 +1,4 @@
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
-
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include "engine.h"
 
 
 #define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
@@ -21,7 +14,7 @@ static struct transform_struct
 	float r_x = 0.0f;
 	float t_x = 0.0f;
 	float t_y = 0.0f;
-	float t_z= 0.0f;
+	float t_z = 0.0f;
 } transf_vals;
 
 static struct camera_struct
@@ -34,7 +27,7 @@ static struct camera_struct
 			alpha = -M_PI + 0.00001f;
 		}
 	}
-	
+
 	void postAlphaIncrease()
 	{
 		alpha += 0.1f;
@@ -62,7 +55,7 @@ static struct camera_struct
 		}
 	}
 
-    //spherical coordinates based on alpha and beta angles + radius
+	//spherical coordinates based on alpha and beta angles + radius
 	float alpha = 0.0f;
 	float beta = 0.0f;
 	float radius = 5.0f;
@@ -81,7 +74,7 @@ void changeSize(int w, int h) {
 
 	// Prevent a divide by zero, when window is too short
 	// (you cant make a window with zero width).
-	if(h == 0)
+	if (h == 0)
 		h = 1;
 
 	// compute window's aspect ratio
@@ -93,21 +86,21 @@ void changeSize(int w, int h) {
 	glLoadIdentity();
 
 	// Set the viewport to be the entire window
-    glViewport(0, 0, w, h);
+	glViewport(0, 0, w, h);
 
 	// Set perspective
-	gluPerspective(45.0f ,ratio, 1.0f ,1000.0f);
+	gluPerspective(45.0f, ratio, 1.0f, 1000.0f);
 
 	// return to the model view matrix mode
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void drawCylinder() 
+void drawCylinder()
 {
 	drawCylinder(cilinder_vals.radius, cilinder_vals.height, cilinder_vals.stacks, cilinder_vals.slices);
 }
 
-void drawCylinder(float radius, float height,int stacks, int slices) 
+void drawCylinder(float radius, float height, int stacks, int slices)
 {
 
 	float alpha = 0, beta = 0, stackheight = height / stacks,
@@ -117,7 +110,7 @@ void drawCylinder(float radius, float height,int stacks, int slices)
 		//Get alpha angle based on i
 		alpha = 2 * M_PI * i / slices;
 		//Get beta for next slice
-		beta= 2 * M_PI / slices;
+		beta = 2 * M_PI / slices;
 		//Lower base Tri is facing down
 		glBegin(GL_TRIANGLES);
 		glVertex3f(0, lowerbound, 0);
@@ -142,7 +135,7 @@ void drawCylinder(float radius, float height,int stacks, int slices)
 			//Lateral right upper to right bottom
 			glBegin(GL_TRIANGLES);
 			glVertex3f(radius*cos(alpha + beta), j*stackheight + lowerbound, radius*sin(alpha + beta));
-			glVertex3f(radius*cos(alpha), (j-1)*stackheight + lowerbound, radius*sin(alpha));
+			glVertex3f(radius*cos(alpha), (j - 1)*stackheight + lowerbound, radius*sin(alpha));
 			glVertex3f(radius*cos(alpha + beta), (j - 1)*stackheight + lowerbound, radius*sin(alpha + beta));
 			glEnd();
 		}
@@ -157,11 +150,11 @@ void renderScene(void) {
 
 	// set the camera
 	glLoadIdentity();
-	gluLookAt(P_X,P_Y,P_Z,
-		      0.0,0.0,0.0,
-			  0.0f,1.0f,0.0f);
+	gluLookAt(P_X, P_Y, P_Z,
+		0.0, 0.0, 0.0,
+		0.0f, 1.0f, 0.0f);
 
-// put the geometric transformations here
+	// put the geometric transformations here
 	//Translate last otherwise you will rotate off center
 	glTranslatef(transf_vals.t_x, transf_vals.t_y, transf_vals.t_z);
 	glRotatef(transf_vals.r_x, 1, 0, 0);
@@ -243,7 +236,7 @@ void processSpecialKeys(int key_code, int x, int y) {
 void mouse_primary_handler(int button, int state, int x, int y)
 {
 	static int mode;
-	if (button==GLUT_LEFT_BUTTON && state==GLUT_UP)
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		mode = (mode + 1) % 3;
 	switch (mode)
 	{
@@ -275,29 +268,29 @@ void mouse_mov_handler(int x, int y)
 
 int main(int argc, char **argv) {
 
-// init GLUT and the window
+	// init GLUT and the window
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
-	glutInitWindowPosition(100,100);
-	glutInitWindowSize(1024,768);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(1024, 768);
 	glutCreateWindow("CG@DI-UM");
 
-// Required callback registry
+	// Required callback registry
 	glutDisplayFunc(renderScene);
 	glutReshapeFunc(changeSize);
 
 
-// put here the registration of the keyboard and menu callbacks
+	// put here the registration of the keyboard and menu callbacks
 	glutKeyboardFunc(processKeys);
 	glutSpecialFunc(processSpecialKeys);
 	glutMouseFunc(mouse_primary_handler);
 	glutPassiveMotionFunc(mouse_mov_handler);
 
-//  OpenGL settings
+	//  OpenGL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-// enter GLUT's main cycle
+	// enter GLUT's main cycle
 	glutMainLoop();
 
 	return 1;

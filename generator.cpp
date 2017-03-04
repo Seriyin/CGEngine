@@ -2,7 +2,36 @@
 
 void generatePlane(ofstream fp, float length, float width) 
 {
-	//implement here
+	fp << 2
+	fp << "\n"
+
+	float pos_x = length / 2;
+	float pos_z = width / 2;
+	float neg_x = -(length / 2);
+	float neg_z = -(width / 2);
+
+	//glBegin(GL_TRIANGLES);
+	//glVertex3f(pos_x, 0, neg_z);
+	fp << pos_x << ":" << 0 << ":" << neg_z;
+	fp << ":";
+	//glVertex3f(neg_x, 0, neg_z);
+	fp << neg_x << ":" << 0 << ":" << neg_z;
+	fp << ":";
+	//glVertex3f(pos_x, 0, pos_z);
+	fp << pos_x << ":" << 0 << ":" << pos_z;
+	fp << ":";
+	//glEnd();
+
+	//glBegin(GL_TRIANGLES);
+	//glVertex3f(pos_x, 0, pos_z);
+	fp << pos_x << ":" << 0 << ":" << pos_z;
+	fp << ":";
+	//glVertex3f(neg_x, 0, neg_z);
+	fp << neg_x << ":" << 0 << ":" << neg_z;
+	fp << ":";
+	//glVertex3f(neg_x, 0, pos_z);
+	fp << neg_x << ":" << 0 << ":" << pos_z;
+	//glEnd();
 }
 
 void generateBox(ofstream fp, float length, float height, float width, int divisions)

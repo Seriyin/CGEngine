@@ -1,5 +1,5 @@
 #include "engine.h"
-
+#include <fstream>
 
 #define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
 #define P_Y camera_vals.radius*sin(camera_vals.beta)
@@ -17,49 +17,7 @@ static struct transform_struct
 	float t_z = 0.0f;
 } transf_vals;
 
-static struct camera_struct
-{
-	void postAlphaDecrease()
-	{
-		alpha -= 0.1f;
-		if (alpha <= -M_PI)
-		{
-			alpha = -M_PI + 0.00001f;
-		}
-	}
-
-	void postAlphaIncrease()
-	{
-		alpha += 0.1f;
-		if (alpha >= M_PI)
-		{
-			alpha = M_PI - 0.000001f;
-		}
-	}
-
-	void postBetaDecrease()
-	{
-		beta -= 0.1f;
-		if (beta <= -M_PI_2)
-		{
-			beta = -M_PI_2 + 0.00001f;
-		}
-	}
-
-	void postBetaIncrease()
-	{
-		beta += 0.1f;
-		if (beta >= M_PI_2)
-		{
-			beta = M_PI_2 - 0.00001f;
-		}
-	}
-
-	//spherical coordinates based on alpha and beta angles + radius
-	float alpha = 0.0f;
-	float beta = 0.0f;
-	float radius = 5.0f;
-} camera_vals;
+static Camera camera_vals;
 
 static struct cilinder_struct
 {
@@ -294,4 +252,68 @@ int main(int argc, char **argv) {
 	glutMainLoop();
 
 	return 1;
+}
+
+
+//SceneTree Methods
+vector<Component *>* SceneTree::LoadXML()
+{
+	//Implement Loading every component from XML to a component vector. Pain in the ass
+	return nullptr;
+}
+
+//
+SceneTree::SceneTree()
+{
+	elements=LoadXML();
+}
+
+SceneTree::~SceneTree()
+{
+	if (elements) 
+	{
+		for each (Component* var in *elements)
+		{
+			delete var;
+		}
+	}
+}
+
+//Render every component through Tree
+void SceneTree::renderTree()
+{
+	if (elements) 
+	{
+		for each (Component* var in *elements)
+		{
+			if (!var->bIsGroupingComponent) 
+			{
+				ModelComponent *mc = (ModelComponent *)var; 
+				mc->renderModel();
+			}
+		}
+	}
+}
+
+
+
+//ModelComponent Methods
+//Constructor for models takes file reads a bunch of vertices, component is not grouping
+ModelComponent::ModelComponent(const char* model) : Component(false)
+{
+	this->model = model;
+	//open file and populate vertices
+}
+
+//Destructor for models
+ModelComponent::~ModelComponent()
+{
+	delete vertices;
+}
+
+/*
+	Draw actual model from vector array
+*/
+void ModelComponent::renderModel()
+{
 }

@@ -10,13 +10,6 @@
 static Camera camera_vals;
 static SceneTree *scene;
 
-static struct cilinder_struct
-{
-	int radius = 1;
-	int height = 2;
-	int stacks = 1;
-	int slices = 6;
-} cilinder_vals;
 
 
 void changeSize(int w, int h) {
@@ -138,14 +131,17 @@ void mouse_primary_handler(int button, int state, int x, int y)
 	{
 	case 0:
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_CULL_FACE);
 		glutPostRedisplay();
 		break;
 	case 1:
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDisable(GL_CULL_FACE);
 		glutPostRedisplay();
 		break;
 	case 2:
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		glDisable(GL_CULL_FACE);
 		glutPostRedisplay();
 		break;
 	default:break;

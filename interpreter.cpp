@@ -108,6 +108,25 @@ int main(int argc, char* argv[]){
       }
     }
     
+	else if (!strcmp(argv[1], "cylinder")) {
+		if ((argc == 7)) {
+			try {
+				float radius = stof(argv[2]), height = stof(argv[3]);
+				int slices = stoi(argv[4]), stacks = stoi(argv[5]);
+				fp.open(argv[6], ios::trunc);
+				generateCylinder(fp, radius, height, slices, stacks);
+				fp.close();
+			}
+			catch (invalid_argument e) {
+				cerr << "Invalid type of arguments provided.";
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			cerr << ("Invalid number of arguments provided.");
+			exit(EXIT_FAILURE);
+		}
+	}
     else {
       cerr << ("Available graphical primitives: plane box sphere cone");
       exit(EXIT_FAILURE);

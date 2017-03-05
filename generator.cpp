@@ -10,25 +10,25 @@ void generatePlane(ofstream& fp, float length, float width)
 	float neg_z = -(width / 2);
 
 	//glBegin(GL_TRIANGLES);
-	//glVertex3f(pos_x, 0, neg_z);
+	//fp <<(pos_x, 0, neg_z);
 	fp << pos_x << " " << 0 << " " << neg_z;
 	fp << " ";
-	//glVertex3f(neg_x, 0, neg_z);
+	//fp <<(neg_x, 0, neg_z);
 	fp << neg_x << " " << 0 << " " << neg_z;
 	fp << " ";
-	//glVertex3f(pos_x, 0, pos_z);
+	//fp <<(pos_x, 0, pos_z);
 	fp << pos_x << " " << 0 << " " << pos_z;
 	fp << " ";
 	//glEnd();
 
 	//glBegin(GL_TRIANGLES);
-	//glVertex3f(pos_x, 0, pos_z);
+	//fp <<(pos_x, 0, pos_z);
 	fp << pos_x << " " << 0 << " " << pos_z;
 	fp << " ";
-	//glVertex3f(neg_x, 0, neg_z);
+	//fp <<(neg_x, 0, neg_z);
 	fp << neg_x << " " << 0 << " " << neg_z;
 	fp << " ";
-	//glVertex3f(neg_x, 0, pos_z);
+	//fp <<(neg_x, 0, pos_z);
 	fp << neg_x << " " << 0 << " " << pos_z;
 	//glEnd();
 }
@@ -136,5 +136,34 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 
 void generateCylinder(ofstream& fp, float radius, float height, int slices, int stacks)
 {
-	//optional
+
+	float alpha = 0, beta = 0, stackheight = height / stacks;
+	int vertices = (int)(slices*(stacks+1)* 6);
+	fp << vertices << "\n";
+	for (int i = 1; i <= slices; i++)
+	{
+		//Get alpha angle based on i
+		alpha = 2 * M_PI * i / slices;
+		//Get beta for next slice
+		beta = 2 * M_PI / slices;
+		//Lower base Tri is facing down
+		fp << 0 << " " << 0 << " " << 0 << " ";
+		fp << radius*cos(alpha + beta) << " " << 0 << " " << radius*sin(alpha + beta) << " ";
+		fp << radius*cos(alpha) << " " << 0 << " " << radius*sin(alpha) << " ";
+		//Upper base Tri is facing up
+		fp << " " << 0 << " " << height << " " << 0 << " ";
+		fp << radius*cos(alpha) << " " << height << " " << radius*sin(alpha) << " ";
+		fp << radius*cos(alpha + beta) << " " << height << " " << radius*sin(alpha + beta) << " ";
+		for (int j = 1; j <= stacks; j++)
+		{
+			//Lateral left bottom to left upper
+			fp << radius*cos(alpha) << " " << (j - 1)*stackheight << " " << radius*sin(alpha) << " ";
+			fp << radius*cos(alpha + beta) << " " << j*stackheight << " " << radius*sin(alpha + beta) << " ";
+			fp << radius*cos(alpha) << " " << j*stackheight << " " << radius*sin(alpha) << " ";
+			//Lateral right upper to right bottom
+			fp << radius*cos(alpha + beta) << " " << j*stackheight << " " << radius*sin(alpha + beta) << " ";
+			fp << radius*cos(alpha) << " " << (j - 1)*stackheight << " " << radius*sin(alpha) << " ";
+			fp << radius*cos(alpha + beta) << " " << (j - 1)*stackheight << " " << radius*sin(alpha + beta) << " ";
+		}
+	}
 }

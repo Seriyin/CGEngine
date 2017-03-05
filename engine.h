@@ -1,4 +1,7 @@
 #pragma once
+//must import stdlib from tinyxml2 first otherwise 
+//exit redefinition from glut breaks everything
+#include "tinyxml2.h"
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -8,13 +11,16 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "tinyxml2.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 using namespace std;
 using namespace tinyxml2;
+
+class SceneTree;
+class Component;
+class ModelComponent;
 
 typedef struct vector_struct
 {

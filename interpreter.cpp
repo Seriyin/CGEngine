@@ -51,7 +51,8 @@ int main(int argc, char* argv[]){
       else if((argc == 7)){
         try{
           float length = stof(argv[3]), height = stof(argv[4]);
-          float width = stof(argv[5]), divisions = stof(argv[6]);
+		  float width = stof(argv[5]);
+		  int divisions = stoi(argv[6]);
           fp.open(argv[6], ios::trunc);
 		  generateBox(fp, length, height, width, divisions);
           fp.close();
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]){
       if((argc == 6)){
         try{
           float radius = stof(argv[3]), slices = stof(argv[4]);
-          float stacks = stof(argv[5]);
+          int stacks = stoi(argv[5]);
           fp.open(argv[5], ios::trunc);
           generateSphere(fp, radius, slices, stacks);
           fp.close();
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]){
       if((argc == 7)){
 	try{
           float radius = stof(argv[3]), height = stof(argv[4]);
-          float slices = stof(argv[5]), stacks = stof(argv[6]);
+          int slices = stoi(argv[5]), stacks = stoi(argv[6]);
           fp.open(argv[6], ios::trunc);
           generateCone(fp, radius, height, slices, stacks);
           fp.close();

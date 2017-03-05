@@ -33,6 +33,87 @@ void generatePlane(ofstream& fp, float length, float width)
 	//glEnd();
 }
 
+void generateBox(float length, float height, float width) {
+
+	//draw bottom side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, 0, 0);
+		glVertex3f(length, 0, width);
+		glVertex3f(0, 0, 0);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, 0, 0);
+		glVertex3f(length, 0, width);
+		glVertex3f(0, 0, width);
+		glEnd();
+
+	//draw upper side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, height, 0);
+		glVertex3f(0, height, 0);
+		glVertex3f(length, height, width);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, height, 0);
+		glVertex3f(0, height, width);
+		glVertex3f(length, height, width);
+		glEnd();
+
+	//draw left side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, height, width);
+		glVertex3f(0, height, 0);
+		glVertex3f(0, 0, width);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, height, 0);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, width);
+		glEnd();
+
+	//draw right side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, height, width);
+		glVertex3f(length, 0, width);
+		glVertex3f(length, height, 0);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, height, 0);
+		glVertex3f(length, 0, width);
+		glVertex3f(length, 0, 0);
+		glEnd();
+
+	//draw front side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, height, width);
+		glVertex3f(0, height, width);
+		glVertex3f(length, 0, width);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, height, width);
+		glVertex3f(0, 0, width);
+		glVertex3f(length, 0, width);
+		glEnd();
+
+	//draw back side
+		glBegin(GL_TRIANGLES);
+		glVertex3f(length, height, 0);
+		glVertex3f(length, 0, 0);
+		glVertex3f(0, height, 0);
+		glEnd();
+
+		glBegin(GL_TRIANGLES);
+		glVertex3f(0, height, 0);
+		glVertex3f(length, 0, 0);
+		glVertex3f(0, 0, 0);
+		glEnd();
+}
+
 void generateBox(float length, float height, float width, int divisions) {
 	int quads = pow(2, divisions);
 	float x_step = length / quads;

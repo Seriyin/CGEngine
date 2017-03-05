@@ -86,7 +86,7 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 	j2 = step; //y value of next loop's vert
 	i = 0; //i iterates through verts on each loop
 
-	fp << ((stacks-1)*slices * 6)+(3*slices) << "\n"; //number of verts used
+	fp << (stacks*slices * 6)+(3*slices) << "\n"; //number of verts used
 	baseAngle = atan((float)height / (float)radius); //base's angle
 
 	while (fabs(height - j) > TOL) {
@@ -100,9 +100,10 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 				
 				fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";
 
+				fp << 0 << " " << j << " " << 0 << " ";
+
 				fp << l*sin(alpha2) << " " << j << " " << l*cos(alpha2) << " ";
 
-				fp << 0 << " " << j << " " << 0 << " ";
 
 				i++;
 			}

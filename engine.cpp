@@ -298,7 +298,7 @@ ModelComponent::~ModelComponent()
 void ModelComponent::renderModel()
 {
 	//Really unsafe code yet again
-	cout << "got to drawing";
+	//cout << "got to drawing";
 	for (int i = 0; i < v_size;)
 	{
 		glBegin(GL_TRIANGLES);
@@ -308,5 +308,5 @@ void ModelComponent::renderModel()
 		}
 		glEnd();
 	}
-	cout << "got through drawing";
+	//cout << "got through drawing";
 }

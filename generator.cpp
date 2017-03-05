@@ -34,7 +34,7 @@ void generatePlane(ofstream& fp, float length, float width)
 }
 
 void generateBox(float length, float height, float width, int divisions) {
-	int quads = pow(4, divisions);
+	int quads = pow(2, divisions);
 	float x_step = length / quads;
 	float y_step = height / quads;
 	float z_step = width / quads;

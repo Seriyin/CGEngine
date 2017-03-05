@@ -35,62 +35,60 @@ void generatePlane(ofstream& fp, float length, float width)
 
 void generateBox(ofstream& fp, float length, float height, float width) {
 
-		fp << 6 * 3 * 2 << "\n"; //6 sides * 3 vertices * 2 triangles
+		fp << 36 << "\n"; //6 sides * 3 vertices * 2 triangles
 		
 		//draw bottom side
-		fp << length << " " << 0 << " " << 0 << " ";
-		fp << length << " " << 0 << " " << width << " ";
-		fp << 0 << " " << 0 << " " << 0 << " ";
+		fp << -length/2 << " " << 0 << " " << width/2 << " ";
+		fp << length/2 << " " << 0 << " " << -width/2 << " ";
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
 
-		fp << 0 << " " << 0 << " " << 0 << " ";
-		fp << length << " " << 0 << " " << width << " ";
-		fp << 0 << " " << 0 << " " << width << " ";
+		fp << -length/2 << " " << 0 << " " << width/2 << " ";
+		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << length/2 << " " << 0 << " " << -width/2 << " ";
 		
 		//draw upper side
-		fp << length << " " << height << " " << 0 << " ";
-		fp << 0 << " " << height << " " << 0 << " ";
-		fp << length << " " << height << " " << width << " ";
-		
-		fp << 0 << " " << height << " " << 0 << " ";
-		fp << 0 << " " << height << " " << width << " ";
-		fp << length << " " << height << " " << width << " ";
-		
+		fp << length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+		fp << length / 2 << " " << height << " " << width / 2 << " ";
+
+		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+		fp << length / 2 << " " << height << " " << -width / 2 << " ";
+
 		//draw left side
-		fp << 0 << " " << height << " " << width << " ";
-		fp << 0 << " " << height << " " << 0;
-		fp << 0 << " " << 0 << " " << width << " ";
-		
-		fp << 0 << " " << height << " " << 0 << " ";
-		fp << 0 << " " << 0 << " " << 0 << " ";
-		fp << 0 << " " << 0 << " " << width << " ";
-		
+		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+
+		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
+
 		//draw right side
-		fp << length << " " << height << " " << width << " ";
-		fp << length << " " << 0 << " " << width << " ";
-		fp << length << " " << height << " " << 0 << " ";
-		
-		fp << length << " " << height << " " << 0 << " ";
-		fp << length << " " << 0 << " " << width << " ";
-		fp << length << " " << 0 << " " << 0 << " ";
-		
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << length / 2 << " " << height << " " << width / 2 << " ";
+
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << length / 2 << " " << height << " " << -width / 2 << " ";
+
 		//draw front side
-		fp << length << " " << height << " " << width << " ";
-		fp << 0 << " " << height << " " << width << " ";
-		fp << length << " " << 0 << " " << width << " ";
-		
-		fp << 0 << " " << height << " " << width << " ";
-		fp << 0 << " " << 0 << " " << width << " ";
-		fp << length << " " << 0 << " " << width << " ";
-	
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << length / 2 << " " << height << " " << width / 2 << " ";
+
+		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
 		//draw back side
-		fp << length << " " << height << " " << 0 << " ";
-		fp << length << " " << 0 << " " << 0 << " ";
-		fp << 0 << " " << height << " " << 0 << " ";
-		
-		fp << 0 << " " << height << " " << 0 << " ";
-		fp << length << " " << 0 << " " << 0 << " ";
-		fp << 0 << " " << 0 << " " << 0 << " ";
-		
+		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << length / 2 << " " << height << " " << -width / 2 << " ";
+
+		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
 }
 
 
@@ -101,7 +99,7 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	float z_step = width / quads;
 	float x_pos = 0, y_pos = 0, z_pos = 0;
 
-	fp << 6 * quads * 2 * 3 << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
+	fp << 36 * quads << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
 
 	//draw bottom side
 	for (z_pos = 0; z_pos < width; z_pos += z_step) {

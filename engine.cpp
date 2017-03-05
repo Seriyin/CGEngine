@@ -208,6 +208,7 @@ vector<Component *> SceneTree::LoadXML(const char *file)
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
 		XMLElement *current=x.FirstChildElement("scene");
+		XMLElement *previous=current;
 		vector<Component*>::iterator it=elements.end();
 		while(current) 
 		{
@@ -216,17 +217,12 @@ vector<Component *> SceneTree::LoadXML(const char *file)
 			{
 				it=elements.insert(it,(Component *)new ModelComponent(current->Attribute("file")));
 			}
-			//No children continue in the same hierarchy level
+			//No children continue in the same or upper? hierarchy level
 			if (current->NoChildren())
 			{
 				current = current->NextSiblingElement();
-				//Try and continue from the parent level's next element 
-				if (!current)
-				{
-					current = current->Parent()->ToElement()->NextSiblingElement();
-				}
 			}
-			else 
+			else
 			{
 				current = current->FirstChildElement();
 			}
@@ -281,6 +277,13 @@ ModelComponent::ModelComponent(const char* model) : Component(false)
 	{
 		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
 	}
+	/*
+	for (int i = 0; i < v_size; i++) 
+	{
+		cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << "\r\n";
+	}
+	all the vertices where loaded successfully
+	*/
 }
 
 //Destructor for models
@@ -295,7 +298,8 @@ ModelComponent::~ModelComponent()
 void ModelComponent::renderModel()
 {
 	//Really unsafe code yet again
-	for (int i = 0; i < v_size; i++)
+	cout << "got to drawing";
+	for (int i = 0; i < v_size;)
 	{
 		glBegin(GL_TRIANGLES);
 		for (int j = 0; j < 3; j++, i++) 
@@ -304,4 +308,5 @@ void ModelComponent::renderModel()
 		}
 		glEnd();
 	}
+	cout << "got through drawing";
 }

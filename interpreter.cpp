@@ -18,8 +18,8 @@ int main(int argc, char* argv[]){
     if(!strcmp(argv[1],"plane")){
       if((argc == 5)){
         try{
-          float length = stof(argv[3]), width = stof(argv[4]);
-          fp.open(argv[2], ios::trunc);
+          float length = stof(argv[2]), width = stof(argv[3]);
+          fp.open(argv[4], ios::trunc);
           generatePlane(fp, length, width);
           fp.close();
         }
@@ -37,8 +37,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"box")){
       if((argc == 6)){
         try{
-          float length = stof(argv[3]), height = stof(argv[4]);
-          float width = stof(argv[5]);
+          float length = stof(argv[2]), height = stof(argv[3]);
+          float width = stof(argv[4]);
           fp.open(argv[5], ios::trunc);
           generateBox(fp, length, height, width, 0);
           fp.close();
@@ -50,9 +50,9 @@ int main(int argc, char* argv[]){
       }
       else if((argc == 7)){
         try{
-          float length = stof(argv[3]), height = stof(argv[4]);
-		  float width = stof(argv[5]);
-		  int divisions = stoi(argv[6]);
+          float length = stof(argv[2]), height = stof(argv[3]);
+		  float width = stof(argv[4]);
+		  int divisions = stoi(argv[5]);
           fp.open(argv[6], ios::trunc);
 		  generateBox(fp, length, height, width, divisions);
           fp.close();
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"sphere")){
       if((argc == 6)){
         try{
-          float radius = stof(argv[3]), slices = stof(argv[4]);
-          int stacks = stoi(argv[5]);
+          float radius = stof(argv[2]), slices = stof(argv[3]);
+          int stacks = stoi(argv[4]);
           fp.open(argv[5], ios::trunc);
           generateSphere(fp, radius, slices, stacks);
           fp.close();
@@ -91,8 +91,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"cone")){
       if((argc == 7)){
 	try{
-          float radius = stof(argv[3]), height = stof(argv[4]);
-          int slices = stoi(argv[5]), stacks = stoi(argv[6]);
+          float radius = stof(argv[2]), height = stof(argv[3]);
+          int slices = stoi(argv[4]), stacks = stoi(argv[5]);
           fp.open(argv[6], ios::trunc);
           generateCone(fp, radius, height, slices, stacks);
           fp.close();

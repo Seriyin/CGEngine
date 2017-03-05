@@ -3,6 +3,7 @@
 #include <string>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#define TOL 10E-6
 
 using namespace std;
 void generatePlane(ofstream& fp, float length, float width);

@@ -79,7 +79,58 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 
 void generateCone(ofstream& fp, float radius, float height, int slices, int stacks) 
 {
-	//implement here
+	float i, j, lu, l, alpha, alpha2, step, j2, baseAngle;
+
+	j = 0; //j iterates through vert loops
+	j2 = step; //y value of next loop's vert
+	i = 0; //i iterates through verts on each loop
+
+	fp << ((stacks-1)*slices * 6)+(3*slices) << "\n"; //number of verts used
+	step = ((float)height) / (float)stacks; //distance traveled on y axis through each loop
+	baseAngle = atan((float)height / (float)radius); //base's angle
+
+	while (fabs(height - j) > TOL) {
+		l = (height - j) / (tan(baseAngle)); //distance of the vert to the axis
+		lu = (height - j2) / (tan(baseAngle));
+		//base triangles loop
+		if (j == 0) {
+			while (i != slices) {
+				alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
+				alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
+				
+				fp << l*sin(alpha) << ":" << j << ":" << l*cos(alpha) << ":";
+
+				fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+
+				fp << 0 << ":" << j << ":" << 0 << ":";
+
+				i++;
+			}
+			i = 0;
+		}
+		while (i != slices) {
+			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
+			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
+
+			//quads's left triangle
+			fp << l*sin(alpha) << ":" << j << ":" << l*cos(alpha) << ":";
+
+			fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+
+			fp << lu*sin(alpha) << ":" << j2 << ":" << lu*cos(alpha) << ":";
+
+			//quad's right triangle
+			fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+
+			fp << lu*sin(alpha2) << ":" << j2 << ":" << lu*cos(alpha2) << ":";
+
+			fp << lu*sin(alpha) << ":" << j2 << ":" << lu*cos(alpha) << ":";
+			i++;
+		}
+		j += step;
+		j2 += step;
+		i = 0;
+	}
 }
 
 void generateCylinder(ofstream& fp, float radius, float height, int slices, int stacks)

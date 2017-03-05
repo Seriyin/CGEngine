@@ -33,192 +33,152 @@ void generatePlane(ofstream& fp, float length, float width)
 	//glEnd();
 }
 
-void generateBox(float length, float height, float width) {
+void generateBox(ofstream& fp, float length, float height, float width) {
 
-	//draw bottom side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, 0, 0);
-		glVertex3f(length, 0, width);
-		glVertex3f(0, 0, 0);
-		glEnd();
+		fp << 6 * 3 * 2 << "\n"; //6 sides * 3 vertices * 2 triangles
+		
+		//draw bottom side
+		fp << length << " " << 0 << " " << 0 << " ";
+		fp << length << " " << 0 << " " << width << " ";
+		fp << 0 << " " << 0 << " " << 0 << " ";
 
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, 0, 0);
-		glVertex3f(length, 0, width);
-		glVertex3f(0, 0, width);
-		glEnd();
-
-	//draw upper side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, height, 0);
-		glVertex3f(0, height, 0);
-		glVertex3f(length, height, width);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, height, 0);
-		glVertex3f(0, height, width);
-		glVertex3f(length, height, width);
-		glEnd();
-
-	//draw left side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, height, width);
-		glVertex3f(0, height, 0);
-		glVertex3f(0, 0, width);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, height, 0);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 0, width);
-		glEnd();
-
-	//draw right side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, height, width);
-		glVertex3f(length, 0, width);
-		glVertex3f(length, height, 0);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, height, 0);
-		glVertex3f(length, 0, width);
-		glVertex3f(length, 0, 0);
-		glEnd();
-
-	//draw front side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, height, width);
-		glVertex3f(0, height, width);
-		glVertex3f(length, 0, width);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, height, width);
-		glVertex3f(0, 0, width);
-		glVertex3f(length, 0, width);
-		glEnd();
-
-	//draw back side
-		glBegin(GL_TRIANGLES);
-		glVertex3f(length, height, 0);
-		glVertex3f(length, 0, 0);
-		glVertex3f(0, height, 0);
-		glEnd();
-
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, height, 0);
-		glVertex3f(length, 0, 0);
-		glVertex3f(0, 0, 0);
-		glEnd();
+		fp << 0 << " " << 0 << " " << 0 << " ";
+		fp << length << " " << 0 << " " << width << " ";
+		fp << 0 << " " << 0 << " " << width << " ";
+		
+		//draw upper side
+		fp << length << " " << height << " " << 0 << " ";
+		fp << 0 << " " << height << " " << 0 << " ";
+		fp << length << " " << height << " " << width << " ";
+		
+		fp << 0 << " " << height << " " << 0 << " ";
+		fp << 0 << " " << height << " " << width << " ";
+		fp << length << " " << height << " " << width << " ";
+		
+		//draw left side
+		fp << 0 << " " << height << " " << width << " ";
+		fp << 0 << " " << height << " " << 0;
+		fp << 0 << " " << 0 << " " << width << " ";
+		
+		fp << 0 << " " << height << " " << 0 << " ";
+		fp << 0 << " " << 0 << " " << 0 << " ";
+		fp << 0 << " " << 0 << " " << width << " ";
+		
+		//draw right side
+		fp << length << " " << height << " " << width << " ";
+		fp << length << " " << 0 << " " << width << " ";
+		fp << length << " " << height << " " << 0 << " ";
+		
+		fp << length << " " << height << " " << 0 << " ";
+		fp << length << " " << 0 << " " << width << " ";
+		fp << length << " " << 0 << " " << 0 << " ";
+		
+		//draw front side
+		fp << length << " " << height << " " width << " ";
+		fp << 0 << " " << height << " " << width << " ";
+		fp << length << " " << 0 << " " << width << " ";
+		
+		fp << 0 << " " << height << " " << width << " ";
+		fp << 0 << " " << 0 << " " << width << " ";
+		fp << length << " " << 0 << " " << width << " ";
+	
+		//draw back side
+		fp << length << " " << height << " " << 0 << " ";
+		fp << length << " " << 0 << " " << 0 << " ";
+		fp << 0 << " " << height << " " << 0 << " ";
+		
+		fp << 0 << " " << height << " " << 0 << " ";
+		fp << length << " " << 0 << " " << 0 << " ";
+		fp << 0 << " " << 0 << " " << 0 << " ";
+		
 }
 
-void generateBox(float length, float height, float width, int divisions) {
+
+void generateBox(ofstream& fp, float length, float height, float width, int divisions) {
 	int quads = pow(2, divisions);
 	float x_step = length / quads;
 	float y_step = height / quads;
 	float z_step = width / quads;
-	float x_pos = 0;
-	float y_pos = 0;
-	float z_pos = 0;
-	
+	float x_pos = 0, y_pos = 0, z_pos = 0;
+
+	fp << 6 * quads * 2 * 3 << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
+
 	//draw bottom side
 	for (z_pos = 0; z_pos < width; z_pos += z_step) {
 		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos + x_step, 0, z_pos);
-			glVertex3f(x_pos + x_step, 0, z_pos + z_step);
-			glVertex3f(x_pos, 0, z_pos);
-			glEnd();
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos, 0, z_pos);
-			glVertex3f(x_pos + x_step, 0, z_pos + z_step);
-			glVertex3f(x_pos, 0, z_pos + z_step);
-			glEnd();
+			fp << x_pos + x_step << " " << 0 << " " << z_pos << " ";
+			fp << x_pos + x_step << " " << 0 << " " << z_pos + z_step << " ";
+			fp << x_pos << " " << 0 << " " << z_pos << " ";
+
+			fp << x_pos << " " << 0 << " " << z_pos << " ";
+			fp << x_pos + x_step << " " << 0 << " " << z_pos + z_step << " ";
+			fp << x_pos << " " << 0 << " " << z_pos + z_step << " ";
 		}
 	}
 
 	//draw upper side
 	for (z_pos = 0; z_pos < width; z_pos += z_step) {
 		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos + x_step, height, z_pos);
-			glVertex3f(x_pos, height, z_pos);
-			glVertex3f(x_pos + x_step, height, z_pos + z_step);
-			glEnd();
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos, height, z_pos);
-			glVertex3f(x_pos, height, z_pos + z_step);
-			glVertex3f(x_pos + x_step, height, z_pos + z_step);
-			glEnd();
+			fp << x_pos + x_step << " " << height << " " << z_pos << " ";
+			fp << x_pos << " " << height << " " << z_pos << " ";
+			fp << x_pos + x_step << " " << height << " " << z_pos + z_step << " ";
+
+			fp << x_pos << " " << height << " " << z_pos << " ";
+			fp << x_pos << " " << height << " " << z_pos + z_step << " ";
+			fp << x_pos + x_step << " " << height << " " << z_pos + z_step << " ";
 		}
 	}
 
 	//draw left side
 	for (y_pos = 0; y_pos < height; y_pos += y_step) {
 		for (z_pos = 0; z_pos < width; z_pos += z_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(0, y_pos + y_step, z_pos + z_step);
-			glVertex3f(0, y_pos + y_step, z_pos);
-			glVertex3f(0, y_pos, z_pos + z_step);
-			glEnd();
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(0, y_pos + y_step, z_pos);
-			glVertex3f(0, y_pos, z_pos);
-			glVertex3f(0, y_pos, z_pos + z_step);
-			glEnd();
+			fp << 0 << " " << y_pos + y_step << " " << z_pos + z_step << " ";
+			fp << 0 << " " << y_pos + y_step << " " << z_pos << " ";
+			fp << 0 << " " << y_pos << " " << z_pos + z_step << " ";
+
+			fp << 0 << " " << y_pos + y_step << " " << z_pos << " ";
+			fp << 0 << " " << y_pos << " " << z_pos << " ";
+			fp << 0 << " " << y_pos << " " << z_pos + z_step << " ";
 		}
 	}
 	//draw right side
 	for (y_pos = 0; y_pos < height; y_pos += y_step) {
 		for (z_pos = 0; z_pos < width; z_pos += z_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(length, y_pos + y_step, z_pos + z_step);
-			glVertex3f(length, y_pos, z_pos + z_step);
-			glVertex3f(length, y_pos + y_step, z_pos);
-			glEnd();
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(length, y_pos + y_step, z_pos);
-			glVertex3f(length, y_pos, z_pos + z_step);
-			glVertex3f(length, y_pos, z_pos);
-			glEnd();
+			fp << length << " " << y_pos + y_step << " " << z_pos + z_step << " ";
+			fp << length << " " << y_pos << " " << z_pos + z_step << " ";
+			fp << length << " " << y_pos + y_step << " " << z_pos << " ";
+
+			fp << length << " " << y_pos + y_step << " " << z_pos << " ";
+			fp << length << " " << y_pos << " " << z_pos + z_step << " ";
+			fp << length << " " << y_pos << " " << z_pos << " ";
 		}
 	}
 	//draw front side
 	for (y_pos = 0; y_pos < height; y_pos += y_step) {
 		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos + x_step, y_pos + y_step, width);
-			glVertex3f(x_pos, y_pos + y_step, width);
-			glVertex3f(x_pos + x_step, y_pos, width);
-			glEnd();
+			fp << x_pos + x_step << " " << y_pos + y_step << " " << width << " ";
+			fp << x_pos << " " << y_pos + y_step << " " << width << " ";
+			fp << x_pos + x_step << " " << y_pos << " " << width << " ";
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos, y_pos + y_step, width);
-			glVertex3f(x_pos, y_pos, width);
-			glVertex3f(x_pos + x_step, y_pos, width);
-			glEnd();
+			fp << x_pos << " " << y_pos + y_step << " " << width << " ";
+			fp << x_pos << " " << y_pos << " " << width << " ";
+			fp << x_pos + x_step << " " << y_pos << " " << width << " ";
 		}
 	}
 	//draw back side
 	for (y_pos = 0; y_pos < height; y_pos += y_step) {
 		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos + x_step, y_pos + y_step, 0);
-			glVertex3f(x_pos + x_step, y_pos, 0);
-			glVertex3f(x_pos, y_pos + y_step, 0);
-			glEnd();
+			fp << x_pos + x_step << " " << y_pos + y_step << " " << 0 << " ";
+			fp << x_pos + x_step << " " << y_pos << " " << 0 << " ";
+			fp << x_pos << " " << y_pos + y_step << " " << 0 << " ";
 
-			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos, y_pos + y_step, 0);
-			glVertex3f(x_pos + x_step, y_pos, 0);
-			glVertex3f(x_pos, y_pos, 0);
-			glEnd();
+			fp << x_pos << " " << y_pos + y_step << " " << 0 << " ";
+			fp << x_pos + x_step << " " << y_pos << " " << 0 << " ";
+			fp << x_pos << " " << y_pos << " " << 0 << " ";
 		}
 	}
 }

@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iostream>
 #include "generator.h"
-using namespace generator;
 
 int main(int argc, char* argv[]){
 
@@ -19,7 +18,7 @@ int main(int argc, char* argv[]){
     if(!strcmp(argv[1],"plane")){
       if((argc == 5)){
         try{
-          float length = std::stof(argv[3]), width = std::stof(argv[4]);
+          float length = stof(argv[3]), width = stof(argv[4]);
           fp.open(argv[2], ios::trunc);
           generatePlane(fp, length, width);
           fp.close();
@@ -38,8 +37,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"box")){
       if((argc == 6)){
         try{
-          float length = std::stof(argv[3]), height = std::stof(argv[4]);
-          float width = std::stof(argv[5]);
+          float length = stof(argv[3]), height = stof(argv[4]);
+          float width = stof(argv[5]);
           fp.open(argv[5], ios::trunc);
           generateBox(fp, length, height, width, 0);
           fp.close();
@@ -51,10 +50,10 @@ int main(int argc, char* argv[]){
       }
       else if((argc == 7)){
         try{
-          float length = std::stof(argv[3]), height = std::stof(argv[4]);
-          float width = std::stof(argv[5]), divisions = std::stof(argv[6]);
+          float length = stof(argv[3]), height = stof(argv[4]);
+          float width = stof(argv[5]), divisions = stof(argv[6]);
           fp.open(argv[6], ios::trunc);
-          generateBox(fp, length, height, width, divisions)
+		  generateBox(fp, length, height, width, divisions);
           fp.close();
         }
         catch(invalid_argument e){
@@ -71,8 +70,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"sphere")){
       if((argc == 6)){
         try{
-          float radius = std::stof(argv[3]), slices = std::stof(argv[4]);
-          float stacks = std::stof(argv[5]);
+          float radius = stof(argv[3]), slices = stof(argv[4]);
+          float stacks = stof(argv[5]);
           fp.open(argv[5], ios::trunc);
           generateSphere(fp, radius, slices, stacks);
           fp.close();
@@ -91,8 +90,8 @@ int main(int argc, char* argv[]){
     else if(!strcmp(argv[1],"cone")){
       if((argc == 7)){
 	try{
-          float radius = std::stof(argv[3]), height = std::stof(argv[4]);
-          float slices = std::stof(argv[5]), stacks = std::stof(argv[6]);
+          float radius = stof(argv[3]), height = stof(argv[4]);
+          float slices = stof(argv[5]), stacks = stof(argv[6]);
           fp.open(argv[6], ios::trunc);
           generateCone(fp, radius, height, slices, stacks);
           fp.close();

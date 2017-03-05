@@ -1,9 +1,8 @@
 #include "generator.h"
 
-void generatePlane(ofstream fp, float length, float width)
+void generatePlane(ofstream& fp, float length, float width)
 {
-	fp << 6;
-	fp << "\n";
+	fp << 6 <<"\n";
 
 	float pos_x = length / 2;
 	float pos_z = width / 2;
@@ -34,12 +33,12 @@ void generatePlane(ofstream fp, float length, float width)
 	//glEnd();
 }
 
-void generateBox(ofstream fp, float length, float height, float width, int divisions)
+void generateBox(ofstream& fp, float length, float height, float width, int divisions)
 {
 	//implement here
 }
 
-void generateSphere(ofstream fp, float radius, int slices, int stacks)
+void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 {
 	float i, j, lu, l, ld, alpha, alpha2, alpha3, alpha4,vertNum;
 
@@ -78,12 +77,12 @@ void generateSphere(ofstream fp, float radius, int slices, int stacks)
 	}
 }
 
-void generateCone(ofstream fp, float radius, float height, int slices, int stacks) 
+void generateCone(ofstream& fp, float radius, float height, int slices, int stacks) 
 {
 	//implement here
 }
 
-void generateCylinder(ofstream fp, float radius, float height, int slices, int stacks)
+void generateCylinder(ofstream& fp, float radius, float height, int slices, int stacks)
 {
 	//optional
 }

@@ -4,12 +4,17 @@
 #else
 #include <GL/glut.h>
 #endif
+#include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include "tinyxml2.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <vector>
-#include <string>
+
 using namespace std;
+using namespace tinyxml2;
 
 typedef struct vector_struct
 {
@@ -66,11 +71,11 @@ class SceneTree
 	private:
 		vector<Component *> elements;
 		//Load Components from XML
-		vector<Component *> LoadXML();
+		vector<Component *> LoadXML(const char *file);
 	
 	public:
 		//Constructor
-		SceneTree();
+		SceneTree(const char *file);
 		//Destructor
 		~SceneTree();
 

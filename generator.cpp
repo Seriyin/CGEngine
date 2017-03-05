@@ -11,25 +11,25 @@ void generatePlane(ofstream& fp, float length, float width)
 
 	//glBegin(GL_TRIANGLES);
 	//glVertex3f(pos_x, 0, neg_z);
-	fp << pos_x << ":" << 0 << ":" << neg_z;
-	fp << ":";
+	fp << pos_x << " " << 0 << " " << neg_z;
+	fp << " ";
 	//glVertex3f(neg_x, 0, neg_z);
-	fp << neg_x << ":" << 0 << ":" << neg_z;
-	fp << ":";
+	fp << neg_x << " " << 0 << " " << neg_z;
+	fp << " ";
 	//glVertex3f(pos_x, 0, pos_z);
-	fp << pos_x << ":" << 0 << ":" << pos_z;
-	fp << ":";
+	fp << pos_x << " " << 0 << " " << pos_z;
+	fp << " ";
 	//glEnd();
 
 	//glBegin(GL_TRIANGLES);
 	//glVertex3f(pos_x, 0, pos_z);
-	fp << pos_x << ":" << 0 << ":" << pos_z;
-	fp << ":";
+	fp << pos_x << " " << 0 << " " << pos_z;
+	fp << " ";
 	//glVertex3f(neg_x, 0, neg_z);
-	fp << neg_x << ":" << 0 << ":" << neg_z;
-	fp << ":";
+	fp << neg_x << " " << 0 << " " << neg_z;
+	fp << " ";
 	//glVertex3f(neg_x, 0, pos_z);
-	fp << neg_x << ":" << 0 << ":" << pos_z;
+	fp << neg_x << " " << 0 << " " << pos_z;
 	//glEnd();
 }
 
@@ -58,18 +58,18 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 			alpha4 = (j + 1)*(M_PI / (stacks)); // angle next loop's vert makes with z axis
 
 			//quads's left triangle
-			fp << l*sin(alpha) << ":" << radius*sin(alpha3) << ":" << l*cos(alpha) << ":";
+			fp << l*sin(alpha) << " " << radius*sin(alpha3) << " " << l*cos(alpha) << " ";
 
-			fp << l*sin(alpha2) << ":" << radius*sin(alpha3) << ":" << l*cos(alpha2) << ":";
+			fp << l*sin(alpha2) << " " << radius*sin(alpha3) << " " << l*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha) << ":" << radius*sin(alpha4) << ":" << lu*cos(alpha) << ":";
+			fp << lu*sin(alpha) << " " << radius*sin(alpha4) << " " << lu*cos(alpha) << " ";
 
 			//quad's right triangle
-			fp << l*sin(alpha2) << ":" << radius*sin(alpha3) << ":" << l*cos(alpha2) << ":";
+			fp << l*sin(alpha2) << " " << radius*sin(alpha3) << " " << l*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha2) << ":" << radius*sin(alpha4) << ":" << lu*cos(alpha2) << ":";
+			fp << lu*sin(alpha2) << " " << radius*sin(alpha4) << " " << lu*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha) << ":" << radius*sin(alpha4) << ":" << lu*cos(alpha) << ":";
+			fp << lu*sin(alpha) << " " << radius*sin(alpha4) << " " << lu*cos(alpha) << " ";
 			i++;
 		}
 		j++;
@@ -98,11 +98,11 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 				alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
 				alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
 				
-				fp << l*sin(alpha) << ":" << j << ":" << l*cos(alpha) << ":";
+				fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";
 
-				fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+				fp << l*sin(alpha2) << " " << j << " " << l*cos(alpha2) << " ";
 
-				fp << 0 << ":" << j << ":" << 0 << ":";
+				fp << 0 << " " << j << " " << 0 << " ";
 
 				i++;
 			}
@@ -113,18 +113,18 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
 
 			//quads's left triangle
-			fp << l*sin(alpha) << ":" << j << ":" << l*cos(alpha) << ":";
+			fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";
 
-			fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+			fp << l*sin(alpha2) << " " << j << " " << l*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha) << ":" << j2 << ":" << lu*cos(alpha) << ":";
+			fp << lu*sin(alpha) << " " << j2 << " " << lu*cos(alpha) << " ";
 
 			//quad's right triangle
-			fp << l*sin(alpha2) << ":" << j << ":" << l*cos(alpha2) << ":";
+			fp << l*sin(alpha2) << " " << j << " " << l*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha2) << ":" << j2 << ":" << lu*cos(alpha2) << ":";
+			fp << lu*sin(alpha2) << " " << j2 << " " << lu*cos(alpha2) << " ";
 
-			fp << lu*sin(alpha) << ":" << j2 << ":" << lu*cos(alpha) << ":";
+			fp << lu*sin(alpha) << " " << j2 << " " << lu*cos(alpha) << " ";
 			i++;
 		}
 		j += step;

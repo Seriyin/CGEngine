@@ -1,5 +1,5 @@
 #include "engine.h"
-#include <fstream>
+
 
 //Position of the camera
 #define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
@@ -8,6 +8,7 @@
 
 
 static Camera camera_vals;
+static SceneTree *scene;
 
 static struct cilinder_struct
 {
@@ -56,13 +57,7 @@ void renderScene(void) {
 		0.0, 0.0, 0.0,
 		0.0f, 1.0f, 0.0f);
 
-	// put the geometric transformations here
-	//Translate last otherwise you will rotate off center
-	glTranslatef(transf_vals.t_x, transf_vals.t_y, transf_vals.t_z);
-	glRotatef(transf_vals.r_x, 1, 0, 0);
-	glRotatef(transf_vals.r_y, 0, 1, 0);
-
-	drawCylinder();
+	scene->renderTree();
 
 	// End of frame
 	glutSwapBuffers();
@@ -71,22 +66,19 @@ void renderScene(void) {
 
 
 // write function to process keyboard events
-void processKeys(unsigned char key, int x, int y) {
-	switch (key) {
+void processKeys(unsigned char key, int x, int y) 
+{
+/*	switch (key) {
 	case 'a':
-		camera_vals.postAlphaDecrease();
 		glutPostRedisplay();
 		break;
 	case 'd':
-		camera_vals.postAlphaIncrease();
 		glutPostRedisplay();
 		break;
 	case 's':
-		camera_vals.postBetaDecrease();
 		glutPostRedisplay();
 		break;
 	case 'w':
-		camera_vals.postBetaIncrease();
 		glutPostRedisplay();
 		break;
 	case '+':
@@ -108,25 +100,27 @@ void processKeys(unsigned char key, int x, int y) {
 	default:
 		break;
 	}
+*/
 }
 
-void processSpecialKeys(int key_code, int x, int y) {
+void processSpecialKeys(int key_code, int x, int y) 
+{
 	switch (key_code)
 	{
 	case GLUT_KEY_DOWN:
-		transf_vals.t_y -= 0.1;
+		camera_vals.postBetaDecrease();
 		glutPostRedisplay();
 		break;
 	case GLUT_KEY_UP:
-		transf_vals.t_y += 0.1;
+		camera_vals.postBetaIncrease();
 		glutPostRedisplay();
 		break;
 	case GLUT_KEY_LEFT:
-		transf_vals.t_x -= 0.1;
+		camera_vals.postAlphaDecrease();
 		glutPostRedisplay();
 		break;
 	case GLUT_KEY_RIGHT:
-		transf_vals.t_x += 0.1;
+		camera_vals.postAlphaIncrease();
 		glutPostRedisplay();
 		break;
 	default:break;
@@ -168,48 +162,83 @@ void mouse_mov_handler(int x, int y)
 
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
+	if (argc == 2)
+	{
+		scene = new SceneTree(argv[1]);
 
-	// init GLUT and the window
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(1024, 768);
-	glutCreateWindow("CG@DI-UM");
+		// init GLUT and the window
+		glutInit(&argc, argv);
+		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+		glutInitWindowPosition(100, 100);
+		glutInitWindowSize(1024, 768);
+		glutCreateWindow("CG@DI-UM");
 
-	// Required callback registry
-	glutDisplayFunc(renderScene);
-	glutReshapeFunc(changeSize);
+		// Required callback registry
+		glutDisplayFunc(renderScene);
+		glutReshapeFunc(changeSize);
 
 
-	// put here the registration of the keyboard and menu callbacks
-	glutKeyboardFunc(processKeys);
-	glutSpecialFunc(processSpecialKeys);
-	glutMouseFunc(mouse_primary_handler);
-	glutPassiveMotionFunc(mouse_mov_handler);
+		// put here the registration of the keyboard and menu callbacks
+		glutKeyboardFunc(processKeys);
+		glutSpecialFunc(processSpecialKeys);
+		glutMouseFunc(mouse_primary_handler);
+		glutPassiveMotionFunc(mouse_mov_handler);
 
-	//  OpenGL settings
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+		//  OpenGL settings
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 
-	// enter GLUT's main cycle
-	glutMainLoop();
-
+		// enter GLUT's main cycle
+		glutMainLoop();
+	}
+	else 
+	{
+		cerr << "Invalid number of arguments";
+	}
 	return 1;
 }
 
 
 //SceneTree Methods
-vector<Component *> SceneTree::LoadXML()
+vector<Component *> SceneTree::LoadXML(const char *file)
 {
-	//Implement Loading every component from XML to a component vector. Pain in the ass
+	XMLDocument x;
+	if (x.LoadFile(file) == XML_SUCCESS)
+	{
+		XMLElement *current=x.FirstChildElement("scene");
+		vector<Component*>::iterator it=elements.end();
+		while(current) 
+		{
+			//Found a model try and get the file path into a ModelComponent and build it into the vector at the vector's end
+			if (!strcmp(current->Value(), "model")) 
+			{
+				it=elements.insert(it,(Component *)new ModelComponent(current->Attribute("file")));
+			}
+			//No children continue in the same hierarchy level
+			if (current->NoChildren())
+			{
+				current = current->NextSiblingElement();
+				//Try and continue from the parent level's next element 
+				if (!current)
+				{
+					current = current->Parent()->ToElement()->NextSiblingElement();
+				}
+			}
+			else 
+			{
+				current = current->FirstChildElement();
+			}
+		}
+	}
 	return elements;
 }
 
 //
-SceneTree::SceneTree()
+SceneTree::SceneTree(const char *file)
 {
-	elements=LoadXML();
+	elements=LoadXML(file);
 }
 
 SceneTree::~SceneTree()

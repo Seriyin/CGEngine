@@ -8,6 +8,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <vector>
+#include <string>
 using namespace std;
 
 typedef struct vector_struct
@@ -63,9 +64,9 @@ typedef struct camera_struct
 class SceneTree 
 {
 	private:
-		vector<Component *> *elements;
+		vector<Component *> elements;
 		//Load Components from XML
-		vector<Component *>* LoadXML();
+		vector<Component *> LoadXML();
 	
 	public:
 		//Constructor
@@ -93,7 +94,8 @@ class ModelComponent : public Component
 	private:
 		string model;
 		//Use as a giant pile of vertices you go through as an array
-		Vector3D vertices[];
+		int v_size;
+		Vector3D* vertices;
 	
 	public:
 		ModelComponent(const char *model);

@@ -1,21 +1,11 @@
 #include "engine.h"
 #include <fstream>
 
+//Position of the camera
 #define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
 #define P_Y camera_vals.radius*sin(camera_vals.beta)
 #define P_Z camera_vals.radius*cos(camera_vals.beta)*cos(camera_vals.alpha)
 
-void drawCylinder(float radius, float height, int stacks, int slices);
-void drawCylinder();
-
-static struct transform_struct
-{
-	float r_y = 0.0f;
-	float r_x = 0.0f;
-	float t_x = 0.0f;
-	float t_y = 0.0f;
-	float t_z = 0.0f;
-} transf_vals;
 
 static Camera camera_vals;
 
@@ -53,52 +43,6 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void drawCylinder()
-{
-	drawCylinder(cilinder_vals.radius, cilinder_vals.height, cilinder_vals.stacks, cilinder_vals.slices);
-}
-
-void drawCylinder(float radius, float height, int stacks, int slices)
-{
-
-	float alpha = 0, beta = 0, stackheight = height / stacks,
-		lowerbound = -height / 2;
-	for (int i = 1; i <= slices; i++)
-	{
-		//Get alpha angle based on i
-		alpha = 2 * M_PI * i / slices;
-		//Get beta for next slice
-		beta = 2 * M_PI / slices;
-		//Lower base Tri is facing down
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, lowerbound, 0);
-		glVertex3f(radius*cos(alpha + beta), lowerbound, radius*sin(alpha + beta));
-		glVertex3f(radius*cos(alpha), lowerbound, radius*sin(alpha));
-		glEnd();
-		//Upper base Tri is facing up
-		glBegin(GL_TRIANGLES);
-		glVertex3f(0, -lowerbound, 0);
-		glVertex3f(radius*cos(alpha), -lowerbound, radius*sin(alpha));
-		glVertex3f(radius*cos(alpha + beta), -lowerbound, radius*sin(alpha + beta));
-		glEnd();
-		for (int j = 1; j <= stacks; j++)
-		{
-
-			//Lateral left bottom to left upper
-			glBegin(GL_TRIANGLES);
-			glVertex3f(radius*cos(alpha), (j - 1)*stackheight + lowerbound, radius*sin(alpha));
-			glVertex3f(radius*cos(alpha + beta), j*stackheight + lowerbound, radius*sin(alpha + beta));
-			glVertex3f(radius*cos(alpha), j*stackheight + lowerbound, radius*sin(alpha));
-			glEnd();
-			//Lateral right upper to right bottom
-			glBegin(GL_TRIANGLES);
-			glVertex3f(radius*cos(alpha + beta), j*stackheight + lowerbound, radius*sin(alpha + beta));
-			glVertex3f(radius*cos(alpha), (j - 1)*stackheight + lowerbound, radius*sin(alpha));
-			glVertex3f(radius*cos(alpha + beta), (j - 1)*stackheight + lowerbound, radius*sin(alpha + beta));
-			glEnd();
-		}
-	}
-}
 
 
 void renderScene(void) {
@@ -256,10 +200,10 @@ int main(int argc, char **argv) {
 
 
 //SceneTree Methods
-vector<Component *>* SceneTree::LoadXML()
+vector<Component *> SceneTree::LoadXML()
 {
 	//Implement Loading every component from XML to a component vector. Pain in the ass
-	return nullptr;
+	return elements;
 }
 
 //
@@ -270,27 +214,21 @@ SceneTree::SceneTree()
 
 SceneTree::~SceneTree()
 {
-	if (elements) 
+	for each (Component* var in elements)
 	{
-		for each (Component* var in *elements)
-		{
-			delete var;
-		}
+		delete var;
 	}
 }
 
 //Render every component through Tree
 void SceneTree::renderTree()
 {
-	if (elements) 
+	for each (Component* var in elements)
 	{
-		for each (Component* var in *elements)
+		if (!var->bIsGroupingComponent) 
 		{
-			if (!var->bIsGroupingComponent) 
-			{
-				ModelComponent *mc = (ModelComponent *)var; 
-				mc->renderModel();
-			}
+			ModelComponent *mc = (ModelComponent *)var; 
+			mc->renderModel();
 		}
 	}
 }
@@ -301,8 +239,19 @@ void SceneTree::renderTree()
 //Constructor for models takes file reads a bunch of vertices, component is not grouping
 ModelComponent::ModelComponent(const char* model) : Component(false)
 {
-	this->model = model;
+	this->model.assign(model);
 	//open file and populate vertices
+	ifstream fp;
+	fp.open(model);
+	string input;
+	getline(fp, input);
+	v_size = stoi(input);
+	vertices = new Vector3D[v_size];
+	//really unsafe code
+	for(int i=0;i<v_size;i++) 
+	{
+		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
+	}
 }
 
 //Destructor for models
@@ -316,4 +265,14 @@ ModelComponent::~ModelComponent()
 */
 void ModelComponent::renderModel()
 {
+	//Really unsafe code yet again
+	for (int i = 0; i < v_size; i++)
+	{
+		glBegin(GL_TRIANGLES);
+		for (int j = 0; j < 3; j++, i++) 
+		{
+			glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
+		}
+		glEnd();
+	}
 }

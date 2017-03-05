@@ -33,9 +33,8 @@ void generatePlane(ofstream& fp, float length, float width)
 	//glEnd();
 }
 
-void generateBox(float length, float height, float width, int divisions)
-{
-	int quads = 4 ^ (divisions);
+void generateBox(float length, float height, float width, int divisions) {
+	int quads = pow(4, divisions);
 	float x_step = length / quads;
 	float y_step = height / quads;
 	float z_step = width / quads;
@@ -129,15 +128,15 @@ void generateBox(float length, float height, float width, int divisions)
 	for (y_pos = 0; y_pos < height; y_pos += y_step) {
 		for (x_pos = 0; x_pos < length; x_pos += x_step) {
 			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos + x_step, y_pos + y_step, width);
-			glVertex3f(x_pos + x_step, y_pos, width);
-			glVertex3f(x_pos, y_pos + y_step, width);
+			glVertex3f(x_pos + x_step, y_pos + y_step, 0);
+			glVertex3f(x_pos + x_step, y_pos, 0);
+			glVertex3f(x_pos, y_pos + y_step, 0);
 			glEnd();
 
 			glBegin(GL_TRIANGLES);
-			glVertex3f(x_pos, y_pos + y_step, width);
-			glVertex3f(x_pos + x_step, y_pos, width);
-			glVertex3f(x_pos, y_pos, width);
+			glVertex3f(x_pos, y_pos + y_step, 0);
+			glVertex3f(x_pos + x_step, y_pos, 0);
+			glVertex3f(x_pos, y_pos, 0);
 			glEnd();
 		}
 	}

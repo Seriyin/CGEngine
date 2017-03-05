@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
           float length = stof(argv[2]), height = stof(argv[3]);
           float width = stof(argv[4]);
           fp.open(argv[5], ios::trunc);
-          generateBox(fp, length, height, width, 0);
+          generateBox(fp, length, height, width);
           fp.close();
         }
         catch(invalid_argument e){

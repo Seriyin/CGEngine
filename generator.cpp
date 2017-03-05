@@ -74,7 +74,7 @@ void generateBox(ofstream& fp, float length, float height, float width) {
 		fp << length << " " << 0 << " " << 0 << " ";
 		
 		//draw front side
-		fp << length << " " << height << " " width << " ";
+		fp << length << " " << height << " " << width << " ";
 		fp << 0 << " " << height << " " << width << " ";
 		fp << length << " " << 0 << " " << width << " ";
 		

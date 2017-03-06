@@ -196,10 +196,10 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 
 		//cycle forming quads divided into triangles joining a vert loop to the one above
 		while (i != slices) {
-			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
-			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
-			alpha3 = j*(M_PI / (stacks)); //angle vert makes with z axis
-			alpha4 = (j + 1)*(M_PI / (stacks)); // angle next loop's vert makes with z axis
+			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with z axis
+			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with z axis
+			alpha3 = j*(M_PI / (stacks)); //angle vert makes with y axis
+			alpha4 = (j + 1)*(M_PI / (stacks)); // angle next loop's vert makes with y axis
 
 			//quad's left triangle
 			fp << l*sin(alpha) << " " << radius*sin(alpha3) << " " << l*cos(alpha) << " ";
@@ -241,8 +241,8 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 		//base triangles loop
 		if (j == 0) {
 			while (i != slices) {
-				alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
-				alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
+				alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with z axis
+				alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with z axis
 				
 				fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";
 
@@ -256,8 +256,8 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 			i = 0;
 		}
 		while (i != slices) {
-			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
-			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
+			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with z axis
+			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with z axis
 
 			//quad's left triangle
 			fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";

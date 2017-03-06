@@ -99,7 +99,7 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	float z_step = width / quads;
 	int x_pos = 0, y_pos = 0, z_pos = 0;
 
-	fp << 36 * quads << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
+	fp << 36 * quads * quads << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
 
 	//draw bottom side
 	for (z_pos = 0; z_pos < quads; z_pos++) {

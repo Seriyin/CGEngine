@@ -97,86 +97,86 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	float x_step = length / quads;
 	float y_step = height / quads;
 	float z_step = width / quads;
-	float x_pos = 0, y_pos = 0, z_pos = 0;
+	int x_pos = 0, y_pos = 0, z_pos = 0;
 
 	fp << 36 * quads << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
 
 	//draw bottom side
-	for (z_pos = 0; z_pos < width; z_pos += z_step) {
-		for (x_pos = 0; x_pos < length; x_pos += x_step) {
+	for (z_pos = 0; z_pos < quads; z_pos++) {
+		for (x_pos = 0; x_pos < quads; x_pos++) {
 
-			fp << x_pos + x_step << " " << 0 << " " << z_pos << " ";
-			fp << x_pos + x_step << " " << 0 << " " << z_pos + z_step << " ";
-			fp << x_pos << " " << 0 << " " << z_pos << " ";
+			fp << ((x_pos + 1)*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << ((x_pos + 1)*x_step) - length << " " << 0 << " " << ((z_pos + 1)*z_step) - width / 2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
 
-			fp << x_pos << " " << 0 << " " << z_pos << " ";
-			fp << x_pos + x_step << " " << 0 << " " << z_pos + z_step << " ";
-			fp << x_pos << " " << 0 << " " << z_pos + z_step << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << 0 << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << 0 << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 		}
 	}
 
 	//draw upper side
-	for (z_pos = 0; z_pos < width; z_pos += z_step) {
-		for (x_pos = 0; x_pos < length; x_pos += x_step) {
+	for (z_pos = 0; z_pos < quads; z_pos++) {
+		for (x_pos = 0; x_pos < quads; x_pos++) {
 
-			fp << x_pos + x_step << " " << height << " " << z_pos << " ";
-			fp << x_pos << " " << height << " " << z_pos << " ";
-			fp << x_pos + x_step << " " << height << " " << z_pos + z_step << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << height << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << height << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << height << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 
-			fp << x_pos << " " << height << " " << z_pos << " ";
-			fp << x_pos << " " << height << " " << z_pos + z_step << " ";
-			fp << x_pos + x_step << " " << height << " " << z_pos + z_step << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << height << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << height << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << height << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 		}
 	}
 
 	//draw left side
-	for (y_pos = 0; y_pos < height; y_pos += y_step) {
-		for (z_pos = 0; z_pos < width; z_pos += z_step) {
+	for (y_pos = 0; y_pos < quads; y_pos++) {
+		for (z_pos = 0; z_pos < quads; z_pos++) {
 
-			fp << 0 << " " << y_pos + y_step << " " << z_pos + z_step << " ";
-			fp << 0 << " " << y_pos + y_step << " " << z_pos << " ";
-			fp << 0 << " " << y_pos << " " << z_pos + z_step << " ";
+			fp << -length/2 << " " << (y_pos + 1) * y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << -length/2 << " " << (y_pos + 1) * y_step << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << -length/2 << " " << y_pos*y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 
-			fp << 0 << " " << y_pos + y_step << " " << z_pos << " ";
-			fp << 0 << " " << y_pos << " " << z_pos << " ";
-			fp << 0 << " " << y_pos << " " << z_pos + z_step << " ";
+			fp << -length/2 << " " << (y_pos + 1) * y_step << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << -length/2 << " " << y_pos*y_step << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << -length/2 << " " << y_pos*y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 		}
 	}
 	//draw right side
-	for (y_pos = 0; y_pos < height; y_pos += y_step) {
-		for (z_pos = 0; z_pos < width; z_pos += z_step) {
+	for (y_pos = 0; y_pos < quads; y_pos++) {
+		for (z_pos = 0; z_pos < quads; z_pos++) {
 
-			fp << length << " " << y_pos + y_step << " " << z_pos + z_step << " ";
-			fp << length << " " << y_pos << " " << z_pos + z_step << " ";
-			fp << length << " " << y_pos + y_step << " " << z_pos << " ";
+			fp << length/2 << " " << (y_pos + 1) * y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << length/2 << " " << y_pos*y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << length/2 << " " << (y_pos + 1) * y_step << " " << (z_pos*z_step) - width / 2 << " ";
 
-			fp << length << " " << y_pos + y_step << " " << z_pos << " ";
-			fp << length << " " << y_pos << " " << z_pos + z_step << " ";
-			fp << length << " " << y_pos << " " << z_pos << " ";
+			fp << length/2 << " " << (y_pos + 1) * y_step << " " << (z_pos*z_step) - width / 2 << " ";
+			fp << length/2 << " " << y_pos*y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
+			fp << length/2 << " " << y_pos*y_step << " " << (z_pos*z_step) - width / 2 << " ";
 		}
 	}
 	//draw front side
-	for (y_pos = 0; y_pos < height; y_pos += y_step) {
-		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			fp << x_pos + x_step << " " << y_pos + y_step << " " << width << " ";
-			fp << x_pos << " " << y_pos + y_step << " " << width << " ";
-			fp << x_pos + x_step << " " << y_pos << " " << width << " ";
+	for (y_pos = 0; y_pos < quads; y_pos++) {
+		for (x_pos = 0; x_pos < quads; x_pos++) {
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << width/2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << width/2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << width/2 << " ";
 
-			fp << x_pos << " " << y_pos + y_step << " " << width << " ";
-			fp << x_pos << " " << y_pos << " " << width << " ";
-			fp << x_pos + x_step << " " << y_pos << " " << width << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << width/2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << y_pos*y_step << " " << width/2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << width/2 << " ";
 		}
 	}
 	//draw back side
-	for (y_pos = 0; y_pos < height; y_pos += y_step) {
-		for (x_pos = 0; x_pos < length; x_pos += x_step) {
-			fp << x_pos + x_step << " " << y_pos + y_step << " " << 0 << " ";
-			fp << x_pos + x_step << " " << y_pos << " " << 0 << " ";
-			fp << x_pos << " " << y_pos + y_step << " " << 0 << " ";
+	for (y_pos = 0; y_pos < quads; y_pos++) {
+		for (x_pos = 0; x_pos < quads; x_pos++) {
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << -width/2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << -width/2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << -width/2 << " ";
 
-			fp << x_pos << " " << y_pos + y_step << " " << 0 << " ";
-			fp << x_pos + x_step << " " << y_pos << " " << 0 << " ";
-			fp << x_pos << " " << y_pos << " " << 0 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << -width/2 << " ";
+			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << -width/2 << " ";
+			fp << (x_pos*x_step) - length / 2 << " " << y_pos*y_step << " " << -width/2 << " ";
 		}
 	}
 }

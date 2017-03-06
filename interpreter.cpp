@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     }
 
     else if(!strcmp(argv[1],"box")){
-      if((argc == 6)){
+		if((argc == 6)){
         try{
           float length = stof(argv[2]), height = stof(argv[3]);
           float width = stof(argv[4]);
@@ -54,8 +54,15 @@ int main(int argc, char* argv[]){
 		  float width = stof(argv[4]);
 		  int divisions = stoi(argv[5]);
           fp.open(argv[6], ios::trunc);
-		  generateBox(fp, length, height, width, divisions);
-          fp.close();
+		  if (divisions==0)
+		  {
+			  generateBox(fp, length, height, width);
+		  }
+		  else 
+		  {
+			  generateBox(fp, length, height, width, divisions);
+		  }
+		  fp.close();
         }
         catch(invalid_argument e){
           cerr << "Invalid type of arguments provided.";

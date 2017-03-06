@@ -273,10 +273,10 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 			fp << lu*sin(alpha) << " " << j2 << " " << lu*cos(alpha) << " ";
 			i++;
 		}
-		j += step;
-		j2 += step;
-		i = 0;
 		count++;
+		j = step*count;
+		j2 = (step*count)+step;
+		i = 0;
 	}
 }
 

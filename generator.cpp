@@ -223,16 +223,18 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 void generateCone(ofstream& fp, float radius, float height, int slices, int stacks) 
 {
 	float i, j, lu, l, alpha, alpha2, step, j2, baseAngle;
+	int count;
 
 	step = ((float)height) / (float)stacks; //distance traveled on y axis through each loop
 	j = 0; //j iterates through vert loops
 	j2 = step; //y value of next loop's vert
 	i = 0; //i iterates through verts on each loop
+	count = 0;
 
 	fp << (stacks*slices * 6)+(3*slices) << "\n"; //number of verts used
 	baseAngle = atan((float)height / (float)radius); //base's angle
 
-	while (fabs(height - j) > TOL) {
+	while (count!=stacks) {
 		l = (height - j) / (tan(baseAngle)); //distance of the vert to the axis
 		lu = (height - j2) / (tan(baseAngle));
 		//base triangles loop
@@ -274,6 +276,7 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 		j += step;
 		j2 += step;
 		i = 0;
+		count++;
 	}
 }
 

@@ -38,12 +38,12 @@ void generateBox(ofstream& fp, float length, float height, float width) {
 		fp << 36 << "\n"; //6 sides * 3 vertices * 2 triangles
 		
 		//draw bottom side
-		fp << -length/2 << " " << 0 << " " << width/2 << " ";
-		fp << length/2 << " " << 0 << " " << -width/2 << " ";
-		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
-
+		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
 		fp << -length/2 << " " << 0 << " " << width/2 << " ";
 		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
+
+		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << -length/2 << " " << 0 << " " << width/2 << " ";
 		fp << length/2 << " " << 0 << " " << -width/2 << " ";
 		
 		//draw upper side
@@ -57,12 +57,12 @@ void generateBox(ofstream& fp, float length, float height, float width) {
 
 		//draw left side
 		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
-		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
+		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
 		fp << -length / 2 << " " << height << " " << width / 2 << " ";
 
 		fp << -length / 2 << " " << 0 << " " << -width / 2 << " ";
 		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
-		fp << -length / 2 << " " << height << " " << -width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
 
 		//draw right side
 		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
@@ -74,13 +74,13 @@ void generateBox(ofstream& fp, float length, float height, float width) {
 		fp << length / 2 << " " << height << " " << -width / 2 << " ";
 
 		//draw front side
-		fp << -length / 2 << " " << height << " " << width / 2 << " ";
-		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
 		fp << length / 2 << " " << height << " " << width / 2 << " ";
+		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
 
 		fp << -length / 2 << " " << 0 << " " << width / 2 << " ";
 		fp << length / 2 << " " << 0 << " " << width / 2 << " ";
-		fp << -length / 2 << " " << height << " " << width / 2 << " ";
+		fp << length / 2 << " " << height << " " << width / 2 << " ";
 		//draw back side
 		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
 		fp << -length / 2 << " " << height << " " << -width / 2 << " ";

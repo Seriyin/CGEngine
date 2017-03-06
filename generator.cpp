@@ -275,7 +275,7 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 		}
 		count++;
 		j = step*count;
-		j2 = (step*count)+step;
+		j2 = step*(count+1);
 		i = 0;
 	}
 }

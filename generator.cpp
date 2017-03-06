@@ -106,7 +106,7 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 		for (x_pos = 0; x_pos < quads; x_pos++) {
 
 			fp << ((x_pos + 1)*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
-			fp << ((x_pos + 1)*x_step) - length << " " << 0 << " " << ((z_pos + 1)*z_step) - width / 2 << " ";
+			fp << ((x_pos + 1)*x_step) - length / 2 << " " << 0 << " " << ((z_pos + 1)*z_step) - width / 2 << " ";
 			fp << (x_pos*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
 
 			fp << (x_pos*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";

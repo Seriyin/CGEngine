@@ -93,17 +93,18 @@ void generateBox(ofstream& fp, float length, float height, float width) {
 
 
 void generateBox(ofstream& fp, float length, float height, float width, int divisions) {
-	int quads = pow(2, divisions);
-	float x_step = length / quads;
-	float y_step = height / quads;
-	float z_step = width / quads;
+	//1 division means 4 quads per face, 2 quads in one axis, 2 quads in the other non-fixed axis.
+	divisions++;
+	float x_step = length / divisions;
+	float y_step = height / divisions;
+	float z_step = width / divisions;
 	int x_pos = 0, y_pos = 0, z_pos = 0;
 
-	fp << 36 * quads * quads << "\n"; //6 sides * number of quads * 2 triangles per quad * 3 vertices
+	fp << 36 * divisions * divisions << "\n"; //6 sides * number of divisions+1^2 * 2 triangles per quad * 3 vertices
 
 	//draw bottom side
-	for (z_pos = 0; z_pos < quads; z_pos++) {
-		for (x_pos = 0; x_pos < quads; x_pos++) {
+	for (z_pos = 0; z_pos < divisions; z_pos++) {
+		for (x_pos = 0; x_pos < divisions; x_pos++) {
 
 			fp << ((x_pos + 1)*x_step) - length / 2 << " " << 0 << " " << (z_pos*z_step) - width / 2 << " ";
 			fp << ((x_pos + 1)*x_step) - length / 2 << " " << 0 << " " << ((z_pos + 1)*z_step) - width / 2 << " ";
@@ -116,8 +117,8 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	}
 
 	//draw upper side
-	for (z_pos = 0; z_pos < quads; z_pos++) {
-		for (x_pos = 0; x_pos < quads; x_pos++) {
+	for (z_pos = 0; z_pos < divisions; z_pos++) {
+		for (x_pos = 0; x_pos < divisions; x_pos++) {
 
 			fp << ((x_pos + 1) * x_step) - length / 2 << " " << height << " " << (z_pos*z_step) - width / 2 << " ";
 			fp << (x_pos*x_step) - length / 2 << " " << height << " " << (z_pos*z_step) - width / 2 << " ";
@@ -130,8 +131,8 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	}
 
 	//draw left side
-	for (y_pos = 0; y_pos < quads; y_pos++) {
-		for (z_pos = 0; z_pos < quads; z_pos++) {
+	for (y_pos = 0; y_pos < divisions; y_pos++) {
+		for (z_pos = 0; z_pos < divisions; z_pos++) {
 
 			fp << -length/2 << " " << (y_pos + 1) * y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 			fp << -length/2 << " " << (y_pos + 1) * y_step << " " << (z_pos*z_step) - width / 2 << " ";
@@ -143,8 +144,8 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 		}
 	}
 	//draw right side
-	for (y_pos = 0; y_pos < quads; y_pos++) {
-		for (z_pos = 0; z_pos < quads; z_pos++) {
+	for (y_pos = 0; y_pos < divisions; y_pos++) {
+		for (z_pos = 0; z_pos < divisions; z_pos++) {
 
 			fp << length/2 << " " << (y_pos + 1) * y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
 			fp << length/2 << " " << y_pos*y_step << " " << ((z_pos + 1) * z_step) - width / 2 << " ";
@@ -156,8 +157,8 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 		}
 	}
 	//draw front side
-	for (y_pos = 0; y_pos < quads; y_pos++) {
-		for (x_pos = 0; x_pos < quads; x_pos++) {
+	for (y_pos = 0; y_pos < divisions; y_pos++) {
+		for (x_pos = 0; x_pos < divisions; x_pos++) {
 			fp << ((x_pos + 1) * x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << width/2 << " ";
 			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << width/2 << " ";
 			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << width/2 << " ";
@@ -168,8 +169,8 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 		}
 	}
 	//draw back side
-	for (y_pos = 0; y_pos < quads; y_pos++) {
-		for (x_pos = 0; x_pos < quads; x_pos++) {
+	for (y_pos = 0; y_pos < divisions; y_pos++) {
+		for (x_pos = 0; x_pos < divisions; x_pos++) {
 			fp << ((x_pos + 1) * x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << -width/2 << " ";
 			fp << ((x_pos + 1) * x_step) - length / 2 << " " << y_pos*y_step << " " << -width/2 << " ";
 			fp << (x_pos*x_step) - length / 2 << " " << (y_pos + 1) * y_step << " " << -width/2 << " ";
@@ -200,7 +201,7 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 			alpha3 = j*(M_PI / (stacks)); //angle vert makes with z axis
 			alpha4 = (j + 1)*(M_PI / (stacks)); // angle next loop's vert makes with z axis
 
-			//quads's left triangle
+			//quad's left triangle
 			fp << l*sin(alpha) << " " << radius*sin(alpha3) << " " << l*cos(alpha) << " ";
 
 			fp << l*sin(alpha2) << " " << radius*sin(alpha3) << " " << l*cos(alpha2) << " ";
@@ -258,7 +259,7 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 			alpha = i*(M_PI / (((float)slices) / 2)); //angle vert makes with y axis
 			alpha2 = (i + 1)*(M_PI / (((float)slices) / 2)); //angle next vert on the loop makes with y axis
 
-			//quads's left triangle
+			//quad's left triangle
 			fp << l*sin(alpha) << " " << j << " " << l*cos(alpha) << " ";
 
 			fp << l*sin(alpha2) << " " << j << " " << l*cos(alpha2) << " ";

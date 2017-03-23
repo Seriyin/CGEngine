@@ -21,6 +21,7 @@ using namespace tinyxml2;
 class SceneTree;
 class Component;
 class ModelComponent;
+class GroupComponent;
 
 typedef struct vector_struct
 {
@@ -76,6 +77,8 @@ class SceneTree
 {
 	private:
 		vector<Component *> elements;
+		
+		
 		//Load Components from XML
 		vector<Component *> LoadXML(const char *file);
 	
@@ -112,4 +115,25 @@ class ModelComponent : public Component
 		ModelComponent(const char *model);
 		~ModelComponent();
 		void renderModel();
+};
+
+class GroupComponent : public Component
+{
+private:
+	//Each group component can only have one transform and one rotate
+	Vector3D transform;
+	Vector3D rotate;
+	//Each group can have subgroups, necessitates recursive handling
+	//Or stack based iteration and manual pushing into its component vector from
+	//outside the group component.
+	vector<Component *> elements;
+
+public:
+	//Stack based?
+	GroupComponent();
+	GroupComponent PushElement(Component& element);
+	//Recursive?
+	GroupComponent(XMLElement *current);
+	~GroupComponent();
+	void renderGroup();
 };

@@ -204,14 +204,18 @@ vector<Component *> SceneTree::LoadXML(const char *file)
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
 		XMLElement *current=x.FirstChildElement("scene");
-		XMLElement *previous=current;
-		vector<Component*>::iterator it=elements.end();
 		while(current) 
 		{
-			//Found a model try and get the file path into a ModelComponent and build it into the vector at the vector's end
-			if (!strcmp(current->Value(), "model")) 
+			if (!strcmp(current->Value(),"group")) 
 			{
-				it=elements.insert(it,(Component *)new ModelComponent(current->Attribute("file")));
+				//on new group component recursively travel the group? or explicit stack based iteration?
+				//as is recursive
+				elements.push_back((Component *)new GroupComponent(current));
+			}
+			//Found a model: try and get the file path into a ModelComponent and build it into the vector at the vector's end
+			else if (!strcmp(current->Value(), "model")) 
+			{
+				elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
 			}
 			//No children continue in the same or upper? hierarchy level
 			if (current->NoChildren())
@@ -250,6 +254,11 @@ void SceneTree::renderTree()
 		{
 			ModelComponent *mc = (ModelComponent *)var; 
 			mc->renderModel();
+		}
+		else 
+		{
+			GroupComponent *gc = (GroupComponent *)var;
+			gc->renderGroup();
 		}
 	}
 }
@@ -305,4 +314,23 @@ void ModelComponent::renderModel()
 		glEnd();
 	}
 	//cout << "got through drawing";
+}
+
+
+
+//right now recursive is probly simpler
+GroupComponent::GroupComponent(XMLElement * current) : Component(true)
+{
+}
+
+GroupComponent::~GroupComponent()
+{
+	for each(Component *var in elements) 
+	{
+		delete var;
+	}
+}
+
+void GroupComponent::renderGroup()
+{
 }

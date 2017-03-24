@@ -200,6 +200,7 @@ int main(int argc, char **argv)
 //SceneTree Methods
 vector<Component *> SceneTree::LoadXML(const char *file)
 {
+	bool bFoundModels = false;
 	XMLDocument x;
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
@@ -212,27 +213,38 @@ vector<Component *> SceneTree::LoadXML(const char *file)
 				//as is recursive
 				elements.push_back((Component *)new GroupComponent(current));
 			}
-			//Found a model: try and get the file path into a ModelComponent and build it into the vector at the vector's end
-			else if (!strcmp(current->Value(), "model")) 
+			//Found a models tag, everything after should be model tags.
+			else if (!bFoundModels && !strcmp(current->Value(), "models")) 
 			{
-				elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
+				current=current->FirstChildElement("model");
+				while (current && !strcmp(current->Value(), "model"))
+				{
+					//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+					elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
+					current = current->NextSiblingElement();
+				}
+				//Only one models tag processed per group/scene.
+				bFoundModels = true;
 			}
-			//No children continue in the same or upper? hierarchy level
-			if (current->NoChildren())
+			if (current)
 			{
-				current = current->NextSiblingElement();
-			}
-			else
-			{
-				current = current->FirstChildElement();
+				//No children continue in the same or upper? hierarchy level
+				if (current->NoChildren())
+				{
+					current = current->NextSiblingElement();
+				}
+				else
+				{
+					current = current->FirstChildElement();
+				}
 			}
 		}
 	}
 	return elements;
 }
 
-//
-SceneTree::SceneTree(const char *file)
+//It also initializes the vector to 10 of size(groups are usually tiny)
+SceneTree::SceneTree(const char *file) : elements(10)
 {
 	elements=LoadXML(file);
 }
@@ -282,7 +294,7 @@ ModelComponent::ModelComponent(const char* model) : Component(false)
 	{
 		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
 	}
-	/*
+	/* debug
 	for (int i = 0; i < v_size; i++) 
 	{
 		cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << "\r\n";
@@ -317,11 +329,71 @@ void ModelComponent::renderModel()
 }
 
 
-
-//right now recursive is probly simpler
-GroupComponent::GroupComponent(XMLElement * current) : Component(true)
+/*
+	This constructor takes the XMLElement of the group tag.
+	
+	This constructor produces side-effects.
+	
+	When it exits current should be at the end of the current group or end
+	of XML.
+	
+	It also initializes the vector to 10 of size(groups are usually tiny)
+	
+	Right now is recursive -> probly simpler
+*/
+GroupComponent::GroupComponent(XMLElement * current) : Component(true), elements(10)
 {
+	//Only process one translate, one rotate and one models each group
+	bool bFoundModels = false;
+	bool bFoundTranslate = false;
+	bool bFoundRotate = false;
+	//Need to know where group ends, store it in last
+	XMLElement *last = current->LastChildElement();
+	//current comes in at the group tag, exists after the group's end
+	current = current->FirstChildElement();
+	while (current != last)
+	{
+		if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
+		{
+			translate.x = current->FloatAttribute("X", 0.0f);
+			translate.y = current->FloatAttribute("Y", 0.0f);
+			translate.z = current->FloatAttribute("Z", 0.0f);
+		}
+		else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
+		{
+			rotate.x = current->FloatAttribute("axisX", 0.0f);
+			rotate.y = current->FloatAttribute("axisY", 0.0f);
+			rotate.z = current->FloatAttribute("axisZ", 0.0f);
+			rotateangle = current->FloatAttribute("angle", 0.0f);
+		}
+		else if (!bFoundModels && !strcmp(current->Value(), "models"))
+		{
+			current = current->FirstChildElement("model");
+			while (current && !strcmp(current->Value(), "model"))
+			{
+				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+				elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
+				current = current->NextSiblingElement();
+			}
+			//Only one models tag processed per group/scene.
+			bFoundModels = true;
+		}
+		else if (!strcmp(current->Value(), "group"))
+		{
+			//on new group component recursively travel the group? or explicit stack based iteration?
+			//as is recursive
+			elements.push_back((Component *)new GroupComponent(current));
+		}
+		if (current)
+		{
+			if (current != last)
+			{
+				current->NextSiblingElement();
+			}
+		}
+	}
 }
+
 
 GroupComponent::~GroupComponent()
 {
@@ -333,4 +405,22 @@ GroupComponent::~GroupComponent()
 
 void GroupComponent::renderGroup()
 {
+	//right now assume translates always come first.
+	glPushMatrix();
+	glTranslatef(translate.x,translate.y,translate.z);
+	glRotatef(rotateangle, rotate.x, rotate.y, rotate.z);
+	for each (Component *var in elements)
+	{
+		if (var->bIsGroupingComponent) 
+		{
+			GroupComponent *gc = (GroupComponent *)var;
+			gc->renderGroup();
+		}
+		else 
+		{
+			ModelComponent *mc = (ModelComponent *)var;
+			mc->renderModel();
+		}
+	}
+	glPopMatrix();
 }

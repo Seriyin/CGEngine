@@ -25,6 +25,8 @@ class GroupComponent;
 
 typedef struct vector_struct
 {
+	//initialize a vector as a null vector
+	vector_struct() : x(0.0f), y(0.0f), z(0.0f) {}
 	float x, y, z;
 } Vector3D;
 
@@ -121,17 +123,20 @@ class GroupComponent : public Component
 {
 private:
 	//Each group component can only have one transform and one rotate
-	Vector3D transform;
+	Vector3D translate;
 	Vector3D rotate;
+	float rotateangle;
 	//Each group can have subgroups, necessitates recursive handling
 	//Or stack based iteration and manual pushing into its component vector from
 	//outside the group component.
 	vector<Component *> elements;
-
+	
 public:
 	//Stack based?
+	/*
 	GroupComponent();
 	GroupComponent PushElement(Component& element);
+	*/
 	//Recursive?
 	GroupComponent(XMLElement *current);
 	~GroupComponent();

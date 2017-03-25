@@ -3,17 +3,21 @@
 //exit redefinition from glut breaks everything
 #include "tinyxml2.h"
 #ifdef __APPLE__
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 #else
+#include <GL/glew.h>
 #include <GL/glut.h>
 #endif
 #include <vector>
+#include <unordered_map>
 #include <string>
 #include <iostream>
 #include <fstream>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#define ANG2RAD M_PI/180.0
 
 using namespace std;
 using namespace tinyxml2;
@@ -25,7 +29,7 @@ class GroupComponent;
 
 typedef struct vector_struct
 {
-	//initialize a vector as a null vector
+	//initialize a vector3D as a null vector
 	vector_struct() : x(0.0f), y(0.0f), z(0.0f) {}
 	float x, y, z;
 } Vector3D;
@@ -79,11 +83,7 @@ class SceneTree
 {
 	private:
 		vector<Component *> elements;
-		
-		
-		//Load Components from XML
-		vector<Component *> LoadXML(const char *file);
-	
+			
 	public:
 		//Constructor
 		SceneTree(const char *file);
@@ -109,14 +109,17 @@ class ModelComponent : public Component
 {
 	private:
 		string model;
+		int bound_buffer_index;
 		//Use as a giant pile of vertices you go through as an array
 		int v_size;
 		Vector3D* vertices;
 	
 	public:
 		ModelComponent(const char *model);
+		ModelComponent(string model); 
 		~ModelComponent();
 		void renderModel();
+		void assignBuffer(int index);
 };
 
 class GroupComponent : public Component
@@ -125,7 +128,7 @@ private:
 	//Each group component can only have one transform and one rotate
 	Vector3D translate;
 	Vector3D rotate;
-	float rotateangle;
+	float rotate_angle;
 	//Each group can have subgroups, necessitates recursive handling
 	//Or stack based iteration and manual pushing into its component vector from
 	//outside the group component.
@@ -138,7 +141,7 @@ public:
 	GroupComponent PushElement(Component& element);
 	*/
 	//Recursive?
-	GroupComponent(XMLElement *current);
+	GroupComponent(XMLElement* &current);
 	~GroupComponent();
 	void renderGroup();
 };

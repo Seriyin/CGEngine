@@ -9,7 +9,61 @@
 
 static Camera camera_vals;
 static SceneTree *scene;
+static unordered_map<string, ModelComponent*> *modelmap;
+static GLuint* buffers;
 
+/*
+	Assigns buffers to every model component in model map.
+	Number of buffers is calculated and alocated after building the 
+	SceneTree from modelmap size and before calling this function
+	to assign the buffers to the models.
+*/
+void assignBuffers() 
+{
+	int i=0;
+	for each(const auto var in (*modelmap)) 
+	{
+		var.second->assignBuffer(i++);
+	}
+}
+
+/*
+	Pushes identified models into elements vector if already in modelmap
+	otherwise pushes a new model into the modelmap.
+	
+	Function has side-effects. Works over the XMLElement pointer.
+
+*/
+void processModelsIntoVector(vector<Component*>elements,XMLElement* &current) 
+{
+	current = current->FirstChildElement("model");
+	while (current && !strcmp(current->Value(), "model"))
+	{
+		string path;
+		path.assign(current->Attribute("file"));
+		if (modelmap->count(path)) 
+		{
+			//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+			elements.push_back((Component *)(*modelmap)[path]);
+			current = current->NextSiblingElement();
+		}
+		else
+		{
+			//slightly unsafe, no guarantee key is unique
+			//might not insert, and memory leak ensue
+			//if so, error report.
+			auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
+			if (!inserted_pair.second)
+			{
+				cerr << "Duplicate key in model map" << endl;
+			}
+			else 
+			{
+				elements.push_back((Component *)inserted_pair.first->second);
+			}
+		}
+	}
+}
 
 
 void changeSize(int w, int h) {
@@ -162,6 +216,7 @@ int main(int argc, char **argv)
 {
 	if (argc == 2)
 	{
+		modelmap = new unordered_map<string, ModelComponent*>(10);
 		scene = new SceneTree(argv[1]);
 
 		// init GLUT and the window
@@ -186,6 +241,16 @@ int main(int argc, char **argv)
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 
+		glewInit();
+		glEnableClientState(GL_VERTEX_ARRAY);
+
+		//initialize enough buffers for models in modelmap
+		buffers = new GLuint[modelmap->size()];
+		glGenBuffers(modelmap->size(), buffers);
+
+		//assign said buffers to every model in modelmap
+		assignBuffers();
+
 		// enter GLUT's main cycle
 		glutMainLoop();
 	}
@@ -197,32 +262,32 @@ int main(int argc, char **argv)
 }
 
 
-//SceneTree Methods
-vector<Component *> SceneTree::LoadXML(const char *file)
+
+
+
+
+
+//Load from XML file and construct SceneTree
+//It also initializes the vector to 10 of size(groups are usually tiny)
+SceneTree::SceneTree(const char *file) : elements(10)
 {
 	bool bFoundModels = false;
 	XMLDocument x;
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
-		XMLElement *current=x.FirstChildElement("scene");
-		while(current) 
+		XMLElement *current = x.FirstChildElement("scene");
+		while (current)
 		{
-			if (!strcmp(current->Value(),"group")) 
+			if (!strcmp(current->Value(), "group"))
 			{
 				//on new group component recursively travel the group? or explicit stack based iteration?
 				//as is recursive
 				elements.push_back((Component *)new GroupComponent(current));
 			}
 			//Found a models tag, everything after should be model tags.
-			else if (!bFoundModels && !strcmp(current->Value(), "models")) 
+			else if (!bFoundModels && !strcmp(current->Value(), "models"))
 			{
-				current=current->FirstChildElement("model");
-				while (current && !strcmp(current->Value(), "model"))
-				{
-					//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
-					elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
-					current = current->NextSiblingElement();
-				}
+				processModelsIntoVector(elements, current);
 				//Only one models tag processed per group/scene.
 				bFoundModels = true;
 			}
@@ -240,14 +305,8 @@ vector<Component *> SceneTree::LoadXML(const char *file)
 			}
 		}
 	}
-	return elements;
 }
 
-//It also initializes the vector to 10 of size(groups are usually tiny)
-SceneTree::SceneTree(const char *file) : elements(10)
-{
-	elements=LoadXML(file);
-}
 
 SceneTree::~SceneTree()
 {
@@ -256,6 +315,8 @@ SceneTree::~SceneTree()
 		delete var;
 	}
 }
+
+
 
 //Render every component through Tree
 void SceneTree::renderTree()
@@ -277,11 +338,12 @@ void SceneTree::renderTree()
 
 
 
-//ModelComponent Methods
-//Constructor for models takes file reads a bunch of vertices, component is not grouping
-ModelComponent::ModelComponent(const char* model) : Component(false)
+
+
+
+//Constructor for models takes file reads a bunch of vertices, ModelComponent is not grouping
+ModelComponent::ModelComponent(const char* model) : Component(false), model(model)
 {
-	this->model.assign(model);
 	//open file and populate vertices
 	ifstream fp;
 	fp.open(model);
@@ -303,6 +365,33 @@ ModelComponent::ModelComponent(const char* model) : Component(false)
 	*/
 }
 
+
+
+//Constructor for models takes file path in string form, comes from stack so has to be moved to avoid unnecessary second copy.
+//Reads a bunch of vertices, ModelComponent is not grouping
+ModelComponent::ModelComponent(string model) : Component(false), model(move(model))
+{
+	//open file and populate vertices
+	ifstream fp;
+	fp.open(model);
+	string input;
+	getline(fp, input);
+	v_size = stoi(input);
+	vertices = new Vector3D[v_size];
+	//really unsafe code
+	for (int i = 0; i<v_size; i++)
+	{
+		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
+	}
+	/* debug
+	for (int i = 0; i < v_size; i++)
+	{
+	cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << "\r\n";
+	}
+	all the vertices where loaded successfully
+	*/
+}
+
 //Destructor for models
 ModelComponent::~ModelComponent()
 {
@@ -310,7 +399,11 @@ ModelComponent::~ModelComponent()
 }
 
 /*
-	Draw actual model from vector array
+	Draw actual model from vector array.
+	TODO: VBOs. Use the bounder_buffer_index to bind the array
+	Use the glVerticePointer to write from the array 3 floats at
+	a time. Since Vector3D is a 3 float struct acts directly as
+	a vertex.
 */
 void ModelComponent::renderModel()
 {
@@ -328,6 +421,21 @@ void ModelComponent::renderModel()
 	//cout << "got through drawing";
 }
 
+/*
+	Assigns a buffer to this ModelComponent.
+	Keep the index to later bind during the render pass.
+*/
+void ModelComponent::assignBuffer(int index)
+{
+	bound_buffer_index = index;
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[index]);
+	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(Vector3D),vertices, GL_STATIC_DRAW);
+}
+
+
+
+
+
 
 /*
 	This constructor takes the XMLElement of the group tag.
@@ -341,7 +449,7 @@ void ModelComponent::renderModel()
 	
 	Right now is recursive -> probly simpler
 */
-GroupComponent::GroupComponent(XMLElement * current) : Component(true), elements(10)
+GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements(10)
 {
 	//Only process one translate, one rotate and one models each group
 	bool bFoundModels = false;
@@ -358,23 +466,19 @@ GroupComponent::GroupComponent(XMLElement * current) : Component(true), elements
 			translate.x = current->FloatAttribute("X", 0.0f);
 			translate.y = current->FloatAttribute("Y", 0.0f);
 			translate.z = current->FloatAttribute("Z", 0.0f);
+			bFoundTranslate = true;
 		}
 		else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
 		{
 			rotate.x = current->FloatAttribute("axisX", 0.0f);
 			rotate.y = current->FloatAttribute("axisY", 0.0f);
 			rotate.z = current->FloatAttribute("axisZ", 0.0f);
-			rotateangle = current->FloatAttribute("angle", 0.0f);
+			rotate_angle = current->FloatAttribute("angle", 0.0f);
+			bFoundRotate = true;
 		}
 		else if (!bFoundModels && !strcmp(current->Value(), "models"))
 		{
-			current = current->FirstChildElement("model");
-			while (current && !strcmp(current->Value(), "model"))
-			{
-				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
-				elements.push_back((Component *)new ModelComponent(current->Attribute("file")));
-				current = current->NextSiblingElement();
-			}
+			processModelsIntoVector(elements, current);
 			//Only one models tag processed per group/scene.
 			bFoundModels = true;
 		}
@@ -408,7 +512,7 @@ void GroupComponent::renderGroup()
 	//right now assume translates always come first.
 	glPushMatrix();
 	glTranslatef(translate.x,translate.y,translate.z);
-	glRotatef(rotateangle, rotate.x, rotate.y, rotate.z);
+	glRotatef(rotate_angle, rotate.x, rotate.y, rotate.z);
 	for each (Component *var in elements)
 	{
 		if (var->bIsGroupingComponent) 

@@ -314,3 +314,36 @@ void generateCylinder(ofstream& fp, float radius, float height, int slices, int 
 		}
 	}
 }
+
+//Two discus in the same spot, oriented up and down to avoid culling
+void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
+						int slices) 
+{
+	float alpha = 0, beta = 0;
+	int vertices = (int)(slices * 6) * 2;
+	fp << vertices << "\n";
+	for (int i = 1; i <= slices; i++) 
+	{
+		//Get alpha angle based on i
+		alpha = 2 * M_PI * i / slices;
+		//Get beta for next slice
+		beta = 2 * M_PI / slices;
+		//First base triangle facing one way
+		fp << inner_radius*cos(alpha) << " " << 0 << " " << inner_radius*sin(alpha) << " ";
+		fp << inner_radius*cos(alpha+beta) << " " << 0 << " " << inner_radius*sin(alpha+beta) << " ";
+		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
+		//First base triangle facing other way
+		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
+		fp << inner_radius*cos(alpha) << " " << 0 << " " << inner_radius*sin(alpha) << " ";
+		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
+
+		//Second base triangle facing one way
+		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
+		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
+		fp << outer_radius*cos(alpha + beta) << " " << 0 << " " << outer_radius*sin(alpha + beta) << " ";
+		//Second base triangle facing other way
+		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
+		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
+		fp << outer_radius*cos(alpha + beta) << " " << 0 << " " << outer_radius*sin(alpha + beta) << " ";
+	}
+}

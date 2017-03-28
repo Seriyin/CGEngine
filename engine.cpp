@@ -277,31 +277,42 @@ SceneTree::SceneTree(const char *file) : elements(10)
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
 		XMLElement *current = x.FirstChildElement("scene");
-		while (current)
+		//There must be a scene tag.
+		if (current) 
 		{
-			if (!strcmp(current->Value(), "group"))
+			current = current->FirstChildElement();
+			XMLElement *last = current->LastChildElement();
+			while (current && current != last)
 			{
-				//on new group component recursively travel the group? or explicit stack based iteration?
-				//as is recursive
-				elements.push_back((Component *)new GroupComponent(current));
-			}
-			//Found a models tag, everything after should be model tags.
-			else if (!bFoundModels && !strcmp(current->Value(), "models"))
-			{
-				processModelsIntoVector(elements, current);
-				//Only one models tag processed per group/scene.
-				bFoundModels = true;
+				if (!strcmp(current->Value(), "group"))
+				{
+					//on new group component recursively travel the group? or explicit stack based iteration?
+					//as is recursive
+					elements.push_back((Component *)new GroupComponent(current));
+				}
+				//Found a models tag, everything after should be model tags.
+				else if (!bFoundModels && !strcmp(current->Value(), "models"))
+				{
+					processModelsIntoVector(elements, current);
+					//Only one models tag processed per group/scene.
+					bFoundModels = true;
+				}
+				current = current->NextSiblingElement();
 			}
 			if (current)
 			{
-				//No children continue in the same or upper? hierarchy level
-				if (current->NoChildren())
+				if (!strcmp(current->Value(), "group"))
 				{
-					current = current->NextSiblingElement();
+					//on new group component recursively travel the group? or explicit stack based iteration?
+					//as is recursive
+					elements.push_back((Component *)new GroupComponent(current));
 				}
-				else
+				//Found a models tag, everything after should be model tags.
+				else if (!bFoundModels && !strcmp(current->Value(), "models"))
 				{
-					current = current->FirstChildElement();
+					processModelsIntoVector(elements, current);
+					//Only one models tag processed per group/scene.
+					bFoundModels = true;
 				}
 			}
 		}
@@ -434,8 +445,13 @@ void ModelComponent::assignBuffer(int index)
 	
 	This constructor produces side-effects.
 	
-	When it exits current should be at the end of the current group or end
-	of XML.
+	When it exits current should be pointing at the last element of the group,
+	having processed said element.
+
+	This last element of the group might be the last element in the XML, if so
+	the caller will have to deal with it. If that is the case it will recurse
+	out into the scene and exit since on the last elements pointer never moves
+	forward.
 	
 	It also initializes the vector to 10 of size(groups are usually tiny)
 	
@@ -446,17 +462,49 @@ void ModelComponent::assignBuffer(int index)
 */
 GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements(10), order_vector {ID,ID,ID}
 {
-	//Only process one translate, one rotate and one models each group
-	bool bFoundModels = false;
-	bool bFoundTranslate = false;
-	bool bFoundRotate = false;
-	//Need to know where group ends, store it in last
-	XMLElement *last = current->LastChildElement();
-	//current comes in at the group tag, exists after the group's end
-	current = current->FirstChildElement();
-	//lacks processing the last element
-	while (current != last)
+	//ignore empty groups
+	if (!current->NoChildren()) 
 	{
+		//Only process one translate, one rotate and one models each group
+		bool bFoundModels = false;
+		bool bFoundTranslate = false;
+		bool bFoundRotate = false;
+		//Need to know where group ends, store it in last
+		XMLElement *last = current->LastChildElement();
+		//current comes in at the group tag, exists after the group's end
+		current = current->FirstChildElement();
+
+		while (current != last)
+		{
+			if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
+			{
+				translate.x = current->FloatAttribute("X", 0.0f);
+				translate.y = current->FloatAttribute("Y", 0.0f);
+				translate.z = current->FloatAttribute("Z", 0.0f);
+				bFoundTranslate = true;
+			}
+			else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
+			{
+				rotate.x = current->FloatAttribute("axisX", 0.0f);
+				rotate.y = current->FloatAttribute("axisY", 0.0f);
+				rotate.z = current->FloatAttribute("axisZ", 0.0f);
+				rotate_angle = current->FloatAttribute("angle", 0.0f);
+				bFoundRotate = true;
+			}
+			else if (!bFoundModels && !strcmp(current->Value(), "models"))
+			{
+				processModelsIntoVector(elements, current);
+				//Only one models tag processed per group/scene.
+				bFoundModels = true;
+			}
+			else if (!strcmp(current->Value(), "group"))
+			{
+				//on new group component recursively travel the group? or explicit stack based iteration?
+				//as is recursive
+				elements.push_back((Component *)new GroupComponent(current));
+			}
+			current->NextSiblingElement();
+		}
 		if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
 		{
 			translate.x = current->FloatAttribute("X", 0.0f);
@@ -483,13 +531,6 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 			//on new group component recursively travel the group? or explicit stack based iteration?
 			//as is recursive
 			elements.push_back((Component *)new GroupComponent(current));
-		}
-		if (current)
-		{
-			if (current != last)
-			{
-				current->NextSiblingElement();
-			}
 		}
 	}
 }

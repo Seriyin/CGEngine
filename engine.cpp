@@ -14,6 +14,7 @@ static GLuint* buffers;
 
 /*
 	Assigns buffers to every model component in model map.
+
 	Number of buffers is calculated and alocated after building the 
 	SceneTree from modelmap size and before calling this function
 	to assign the buffers to the models.
@@ -323,16 +324,7 @@ void SceneTree::renderTree()
 {
 	for each (Component* var in elements)
 	{
-		if (!var->bIsGroupingComponent) 
-		{
-			ModelComponent *mc = (ModelComponent *)var; 
-			mc->renderModel();
-		}
-		else 
-		{
-			GroupComponent *gc = (GroupComponent *)var;
-			gc->renderGroup();
-		}
+		var->renderComponent();
 	}
 }
 
@@ -405,7 +397,7 @@ ModelComponent::~ModelComponent()
 	a time. Since Vector3D is a 3 float struct acts directly as
 	a vertex.
 */
-void ModelComponent::renderModel()
+void ModelComponent::renderComponent()
 {
 	//Really unsafe code yet again
 	//cout << "got to drawing";
@@ -448,8 +440,11 @@ void ModelComponent::assignBuffer(int index)
 	It also initializes the vector to 10 of size(groups are usually tiny)
 	
 	Right now is recursive -> probly simpler
+
+	NEED TO DO: have a counter to know the order in which translate, rotate
+	and scale appear and store it in the op order array.
 */
-GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements(10)
+GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements(10), order_vector {ID,ID,ID}
 {
 	//Only process one translate, one rotate and one models each group
 	bool bFoundModels = false;
@@ -459,6 +454,7 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 	XMLElement *last = current->LastChildElement();
 	//current comes in at the group tag, exists after the group's end
 	current = current->FirstChildElement();
+	//lacks processing the last element
 	while (current != last)
 	{
 		if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
@@ -507,24 +503,32 @@ GroupComponent::~GroupComponent()
 	}
 }
 
-void GroupComponent::renderGroup()
+
+/*
+* This method involves following the order of operations present in the original XML.
+* An ID operation means do nothing. If there is nothing to do for a given position
+* than there is nothing to do in the following, otherwise there would have been one
+* of the other three operations to do (either Translate, Rotate and Scale).
+*/
+void GroupComponent::renderComponent()
 {
-	//right now assume translates always come first.
 	glPushMatrix();
-	glTranslatef(translate.x,translate.y,translate.z);
-	glRotatef(rotate_angle, rotate.x, rotate.y, rotate.z);
+	for (int i; order_vector[i] != ID && i < 3; i++) 
+	{
+		switch (order_vector[i]) 
+		{
+			case TR: glTranslatef(translate.x, translate.y, translate.z);
+					 break;
+			case RT: glRotatef(rotate_angle, rotate.x, rotate.y, rotate.z);
+					 break;
+			case SC: glScalef(scale.x, scale.y, scale.z);
+					 break;
+			default: break;
+		}
+	}
 	for each (Component *var in elements)
 	{
-		if (var->bIsGroupingComponent) 
-		{
-			GroupComponent *gc = (GroupComponent *)var;
-			gc->renderGroup();
-		}
-		else 
-		{
-			ModelComponent *mc = (ModelComponent *)var;
-			mc->renderModel();
-		}
+		var->renderComponent();
 	}
 	glPopMatrix();
 }

@@ -27,6 +27,11 @@ class Component;
 class ModelComponent;
 class GroupComponent;
 
+enum Op : unsigned char 
+{
+	ID, TR, RT, SC
+};
+
 typedef struct vector_struct
 {
 	//initialize a vector3D as a null vector
@@ -103,6 +108,8 @@ class Component
 			this->bIsGroupingComponent = bIsGroupingComponent;
 		}
 		~Component() {}
+
+		virtual void renderComponent()=0;
 };
 
 class ModelComponent : public Component 
@@ -118,7 +125,7 @@ class ModelComponent : public Component
 		ModelComponent(const char *model);
 		ModelComponent(string model); 
 		~ModelComponent();
-		void renderModel();
+		void renderComponent();
 		void assignBuffer(int index);
 };
 
@@ -127,8 +134,12 @@ class GroupComponent : public Component
 private:
 	//Each group component can only have one transform and one rotate
 	Vector3D translate;
+	Vector3D scale;
 	Vector3D rotate;
 	float rotate_angle;
+	//vector that holds which operation to do first, second and third.
+	Op order_vector[3];
+
 	//Each group can have subgroups, necessitates recursive handling
 	//Or stack based iteration and manual pushing into its component vector from
 	//outside the group component.
@@ -143,5 +154,6 @@ public:
 	//Recursive?
 	GroupComponent(XMLElement* &current);
 	~GroupComponent();
-	void renderGroup();
+
+	void renderComponent();
 };

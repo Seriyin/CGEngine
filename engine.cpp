@@ -34,11 +34,15 @@ void assignBuffers()
 	
 	Function has side-effects. Works over the XMLElement pointer.
 
+	Will exit pointing at last model tag and print an error in case
+	there's a problem with duplicate keys or unrecognized tags.
+
 */
 void processModelsIntoVector(vector<Component*>elements,XMLElement* &current) 
 {
+	XMLElement *last = current->LastChildElement("model");
 	current = current->FirstChildElement("model");
-	while (current && !strcmp(current->Value(), "model"))
+	while (current!=last && !strcmp(current->Value(), "model"))
 	{
 		string path;
 		path.assign(current->Attribute("file"));
@@ -63,6 +67,37 @@ void processModelsIntoVector(vector<Component*>elements,XMLElement* &current)
 				elements.push_back((Component *)inserted_pair.first->second);
 			}
 		}
+	}
+	if (current == last) 
+	{
+		string path;
+		path.assign(current->Attribute("file"));
+		if (modelmap->count(path))
+		{
+			//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+			elements.push_back((Component *)(*modelmap)[path]);
+			current = current->NextSiblingElement();
+		}
+		else
+		{
+			//slightly unsafe, no guarantee key is unique
+			//might not insert, and memory leak ensue
+			//if so, error report.
+			auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
+			if (!inserted_pair.second)
+			{
+				cerr << "Duplicate key in model map" << endl;
+			}
+			else
+			{
+				elements.push_back((Component *)inserted_pair.first->second);
+			}
+		}
+	}
+	else 
+	{
+		current = last;
+		cerr << "Unrecognized tag in models, may trigger unexpected behavior" << endl;
 	}
 }
 

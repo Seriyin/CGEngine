@@ -40,64 +40,68 @@ void assignBuffers()
 */
 void processModelsIntoVector(vector<Component*>elements,XMLElement* &current) 
 {
-	XMLElement *last = current->LastChildElement("model");
-	current = current->FirstChildElement("model");
-	while (current!=last && !strcmp(current->Value(), "model"))
+	//ignora modelos vazios
+	if (current->NoChildren())
 	{
-		string path;
-		path.assign(current->Attribute("file"));
-		if (modelmap->count(path)) 
+		XMLElement *last = current->LastChildElement("model");
+		current = current->FirstChildElement("model");
+		while (current != last && !strcmp(current->Value(), "model"))
 		{
-			//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
-			elements.push_back((Component *)(*modelmap)[path]);
-			current = current->NextSiblingElement();
-		}
-		else
-		{
-			//slightly unsafe, no guarantee key is unique
-			//might not insert, and memory leak ensue
-			//if so, error report.
-			auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
-			if (!inserted_pair.second)
+			string path;
+			path.assign(current->Attribute("file"));
+			if (modelmap->count(path))
 			{
-				cerr << "Duplicate key in model map" << endl;
-			}
-			else 
-			{
-				elements.push_back((Component *)inserted_pair.first->second);
-			}
-		}
-	}
-	if (current == last) 
-	{
-		string path;
-		path.assign(current->Attribute("file"));
-		if (modelmap->count(path))
-		{
-			//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
-			elements.push_back((Component *)(*modelmap)[path]);
-			current = current->NextSiblingElement();
-		}
-		else
-		{
-			//slightly unsafe, no guarantee key is unique
-			//might not insert, and memory leak ensue
-			//if so, error report.
-			auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
-			if (!inserted_pair.second)
-			{
-				cerr << "Duplicate key in model map" << endl;
+				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+				elements.push_back((Component *)(*modelmap)[path]);
+				current = current->NextSiblingElement();
 			}
 			else
 			{
-				elements.push_back((Component *)inserted_pair.first->second);
+				//slightly unsafe, no guarantee key is unique
+				//might not insert, and memory leak ensue
+				//if so, error report.
+				auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
+				if (!inserted_pair.second)
+				{
+					cerr << "Duplicate key in model map" << endl;
+				}
+				else
+				{
+					elements.push_back((Component *)inserted_pair.first->second);
+				}
 			}
 		}
-	}
-	else 
-	{
-		current = last;
-		cerr << "Unrecognized tag in models, may trigger unexpected behavior" << endl;
+		if (current == last)
+		{
+			string path;
+			path.assign(current->Attribute("file"));
+			if (modelmap->count(path))
+			{
+				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+				elements.push_back((Component *)(*modelmap)[path]);
+				current = current->NextSiblingElement();
+			}
+			else
+			{
+				//slightly unsafe, no guarantee key is unique
+				//might not insert, and memory leak ensue
+				//if so, error report.
+				auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
+				if (!inserted_pair.second)
+				{
+					cerr << "Duplicate key in model map" << endl;
+				}
+				else
+				{
+					elements.push_back((Component *)inserted_pair.first->second);
+				}
+			}
+		}
+		else
+		{
+			current = last;
+			cerr << "Unrecognized tag in models, may trigger unexpected behavior" << endl;
+		}
 	}
 }
 
@@ -438,15 +442,13 @@ ModelComponent::~ModelComponent()
 
 /*
 	Draw actual model from vector array.
-	TODO: VBOs. Use the bounder_buffer_index to bind the array
-	Use the glVerticePointer to write from the array 3 floats at
-	a time. Since Vector3D is a 3 float struct acts directly as
-	a vertex.
+	if IMMEDIATE_MODE is defined draws in immediate mode.
 */
 void ModelComponent::renderComponent()
 {
+
+#ifdef IMMEDIATE_MODE
 	//Really unsafe code yet again
-	//cout << "got to drawing";
 	for (int i = 0; i < v_size;)
 	{
 		glBegin(GL_TRIANGLES);
@@ -456,8 +458,13 @@ void ModelComponent::renderComponent()
 		}
 		glEnd();
 	}
-	//cout << "got through drawing";
+#else
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[bound_buffer_index]);
+	glVertexPointer(3, GL_FLOAT, 0, 0);
+	glDrawArrays(GL_TRIANGLES, 0, v_size);
+#endif
 }
+
 
 /*
 	Assigns a buffer to this ModelComponent.
@@ -500,9 +507,11 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 	//ignore empty groups
 	if (!current->NoChildren()) 
 	{
+		int count=0;
 		//Only process one translate, one rotate and one models each group
 		bool bFoundModels = false;
 		bool bFoundTranslate = false;
+		bool bFoundScale = false;
 		bool bFoundRotate = false;
 		//Need to know where group ends, store it in last
 		XMLElement *last = current->LastChildElement();
@@ -517,6 +526,7 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 				translate.y = current->FloatAttribute("Y", 0.0f);
 				translate.z = current->FloatAttribute("Z", 0.0f);
 				bFoundTranslate = true;
+				order_vector[count++] = TR;
 			}
 			else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
 			{
@@ -525,6 +535,15 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 				rotate.z = current->FloatAttribute("axisZ", 0.0f);
 				rotate_angle = current->FloatAttribute("angle", 0.0f);
 				bFoundRotate = true;
+				order_vector[count++] = RT;
+			}
+			else if (!bFoundScale && !strcmp(current->Value(), "scale"))
+			{
+				scale.x = current->FloatAttribute("X", 0.0f);
+				scale.y = current->FloatAttribute("Y", 0.0f);
+				scale.z = current->FloatAttribute("Z", 0.0f);
+				bFoundScale = true;
+				order_vector[count++] = SC;
 			}
 			else if (!bFoundModels && !strcmp(current->Value(), "models"))
 			{
@@ -545,6 +564,7 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 			translate.x = current->FloatAttribute("X", 0.0f);
 			translate.y = current->FloatAttribute("Y", 0.0f);
 			translate.z = current->FloatAttribute("Z", 0.0f);
+			order_vector[count++] = TR;
 			bFoundTranslate = true;
 		}
 		else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
@@ -554,6 +574,15 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 			rotate.z = current->FloatAttribute("axisZ", 0.0f);
 			rotate_angle = current->FloatAttribute("angle", 0.0f);
 			bFoundRotate = true;
+			order_vector[count++] = RT;
+		}
+		else if (!bFoundScale && !strcmp(current->Value(), "scale"))
+		{
+			scale.x = current->FloatAttribute("X", 0.0f);
+			scale.y = current->FloatAttribute("Y", 0.0f);
+			scale.z = current->FloatAttribute("Z", 0.0f);
+			bFoundScale = true;
+			order_vector[count++] = SC;
 		}
 		else if (!bFoundModels && !strcmp(current->Value(), "models"))
 		{

@@ -1,10 +1,9 @@
 #include "engine.h"
 
 
-//Position of the camera
-#define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
-#define P_Y camera_vals.radius*sin(camera_vals.beta)
-#define P_Z camera_vals.radius*cos(camera_vals.beta)*cos(camera_vals.alpha)
+//#define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
+//#define P_Y camera_vals.radius*sin(camera_vals.beta)
+//#define P_Z camera_vals.radius*cos(camera_vals.beta)*cos(camera_vals.alpha)
 
 //#define IMMEDIATE_MODE
 
@@ -176,6 +175,10 @@ void processKeys(unsigned char key, int xx, int yy)
 				 fpc.camZ += fpc.k*rz;
 				 glutPostRedisplay();
 				 break;
+		case '+':fpc.k *= 2;
+				 break;
+		case '-':fpc.k /= 2; 
+				 break;
 		default: break;
 		}
 	}
@@ -220,7 +223,6 @@ void processMouseButtons(int button, int state, int xx, int yy)
 			if (button == GLUT_LEFT_BUTTON)
 			{
 				tpc.tracking = 1;
-				cout << "tracking " << tpc.tracking << endl;
 			}
 			else if (button == GLUT_RIGHT_BUTTON)
 			{
@@ -262,7 +264,6 @@ void processMouseMotion(int xx, int yy)
 		int alphaAux, betaAux;
 		int rAux;
 
-		cout << tpc.tracking << endl;
 		if (!tpc.tracking)
 			return;
 		deltaX = xx - tpc.startX;
@@ -298,7 +299,27 @@ void processMouseMotion(int xx, int yy)
 	}
 }
 
-
+void printUIInfo() 
+{
+	cout << "F1: First Person Camera" << endl;
+	cout << "F2: Third Person Camera" << endl;
+	cout << "F3: Draw in fill mode" << endl;
+	cout << "F4: Draw in wireframe mode" << endl;
+	cout << "F5: Draw in point mode" << endl;
+	cout << endl << "First Person Camera Controls:" << endl;
+	cout << "W: Walk Forward" << endl;
+	cout << "A: Turn Left" << endl;
+	cout << "D: Turn Right" << endl;
+	cout << "S: Walk Backward" << endl;
+	cout << "Q: Strafe Left" << endl;
+	cout << "E: Strafe Right" << endl;
+	cout << "+: Double Walk Velocity" << endl;
+	cout << "-: Half Walk Velocity" << endl;
+	cout << endl << "Third Person Camera Controls:" << endl;
+	cout << "Hold Left Mouse Button to steer camera" << endl;
+	cout << "Hold Right Mouse Button to adjust overview distance" << endl;
+	cout << endl << "Starting in Third Person Camera...." << endl;
+}
 
 
 int main(int argc, char **argv) 
@@ -339,6 +360,8 @@ int main(int argc, char **argv)
 
 		//assign said buffers to every model in modelmap
 		assignBuffers();
+
+		printUIInfo();
 
 		// enter GLUT's main cycle
 		glutMainLoop();

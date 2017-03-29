@@ -140,36 +140,42 @@ void processKeys(unsigned char key, int xx, int yy)
 		switch (key)
 		{
 		case 'a':fpc.alpha += 0.1f;
-			break;
+				 glutPostRedisplay(); 
+				 break;
 		case 'd':fpc.alpha -= 0.1f;
-			break;
+				 glutPostRedisplay();
+				 break;
 		case 'w':dx = sin(fpc.alpha);
-			dz = cos(fpc.alpha);
-			fpc.camX += fpc.k*dx;
-			fpc.camZ += fpc.k*dz;
-			break;
+				 dz = cos(fpc.alpha);
+				 fpc.camX += fpc.k*dx;
+				 fpc.camZ += fpc.k*dz;
+				 glutPostRedisplay();
+				 break;
 		case 's':dx = sin(fpc.alpha);
-			dz = cos(fpc.alpha);
-			fpc.camX -= fpc.k*dx;
-			fpc.camZ -= fpc.k*dz;
-			break;
+				 dz = cos(fpc.alpha);
+				 fpc.camX -= fpc.k*dx;
+				 fpc.camZ -= fpc.k*dz;
+				 glutPostRedisplay();
+				 break;
 		case 'q':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
-			dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
-			//dot product is calculated by assuming up
-			//vector is expressly (0,1,0), thus
-			//four terms disappear.
-			rx = -dz / sqrt(dz*dz + dx*dx);
-			rz = dx / sqrt(dz*dz + dx*dx);
-			fpc.camX -= fpc.k*rx;
-			fpc.camZ -= fpc.k*rz;
-			break;
+				 dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
+				 //dot product is calculated by assuming up
+			 	 //vector is expressly (0,1,0), thus
+			 	 //four terms disappear.
+				 rx = -dz / sqrt(dz*dz + dx*dx);
+				 rz = dx / sqrt(dz*dz + dx*dx);
+				 fpc.camX -= fpc.k*rx;
+				 fpc.camZ -= fpc.k*rz;
+				 glutPostRedisplay();
+				 break;
 		case 'e':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
-			dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
-			rx = -dz / sqrt(dz*dz + dx*dx);
-			rz = dx / sqrt(dz*dz + dx*dx);
-			fpc.camX += fpc.k*rx;
-			fpc.camZ += fpc.k*rz;
-			break;
+				 dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
+				 rx = -dz / sqrt(dz*dz + dx*dx);
+				 rz = dx / sqrt(dz*dz + dx*dx);
+				 fpc.camX += fpc.k*rx;
+				 fpc.camZ += fpc.k*rz;
+				 glutPostRedisplay();
+				 break;
 		default: break;
 		}
 	}
@@ -181,8 +187,10 @@ void processSpecialKeys(int key_code, int x, int y)
 	switch (key_code)
 	{
 	case GLUT_KEY_F1:activecamera = FP;
+					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F2:activecamera = TP;
+					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F3:glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					 glEnable(GL_CULL_FACE);
@@ -212,6 +220,7 @@ void processMouseButtons(int button, int state, int xx, int yy)
 			if (button == GLUT_LEFT_BUTTON)
 			{
 				tpc.tracking = 1;
+				cout << "tracking " << tpc.tracking << endl;
 			}
 			else if (button == GLUT_RIGHT_BUTTON)
 			{
@@ -239,6 +248,7 @@ void processMouseButtons(int button, int state, int xx, int yy)
 				}
 			}
 			tpc.tracking = 0;
+			glutPostRedisplay();
 		}
 	}
 }
@@ -252,9 +262,9 @@ void processMouseMotion(int xx, int yy)
 		int alphaAux, betaAux;
 		int rAux;
 
+		cout << tpc.tracking << endl;
 		if (!tpc.tracking)
 			return;
-
 		deltaX = xx - tpc.startX;
 		deltaY = yy - tpc.startY;
 
@@ -284,6 +294,7 @@ void processMouseMotion(int xx, int yy)
 		tpc.camX = rAux * sin(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
 		tpc.camZ = rAux * cos(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
 		tpc.camY = rAux * 							     sin(betaAux * M_PI / 180.0);
+		glutPostRedisplay();
 	}
 }
 
@@ -307,14 +318,13 @@ int main(int argc, char **argv)
 		// Required callback registry
 		glutDisplayFunc(renderScene);
 		glutReshapeFunc(changeSize);
-		glutIdleFunc(renderScene);
 
 
 		// put here the registration of the keyboard and menu callbacks
 		glutKeyboardFunc(processKeys);
 		glutSpecialFunc(processSpecialKeys);
 		glutMouseFunc(processMouseButtons);
-		glutPassiveMotionFunc(processMouseMotion);
+		glutMotionFunc(processMouseMotion);
 
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);

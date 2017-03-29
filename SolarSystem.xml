@@ -1,96 +1,91 @@
 <scene>
   <group>
-    <scale X='0.695700' Y='0.695700' Z='0.695700' />
+    <scale X='6.957' Y='6.957' Z='6.957' />
     <models>
       <model file="sphere.3d" />
     </models>
   </group>
   <group>
-      <translate X='0.579' Y='0' Z='0' />
+      <translate X='8.685' Y='0' Z='0' />
       <group>
-        <scale X='0.002439' Y='0.002439' Z='0.002439' />
+        <scale X='0.02439' Y='0.02439' Z='0.02439' />
         <models>
           <model file="sphere.3d" />
         </models>
       </group>
       <group>
-        <translate X='0.503' Y='0' Z='0' />
+        <translate X='7.545' Y='0' Z='0' />
         <group>
-          <scale X='0.006052' Y='0.006052' Z='0.006052' />
+          <scale X='0.06052' Y='0.06052' Z='0.06052' />
           <models>
             <model file="sphere.3d" />
           </models>
         </group>
         <group>
-          <translate X='0.3844' Y='0' Z='0' />
-          <scale X='0.001737' Y='0.001737' Z='0.001737' />
+          <translate X='5.766' Y='0' Z='0' />
+          <scale X='0.01737' Y='0.01737' Z='0.01737' />
           <models>
             <model file="sphere.3d" />
           </models>
         </group>
           <group>
-            <translate X='0.414' Y='0' Z='0' />
+            <translate X='6.21' Y='0' Z='0' />
             <group>
-              <scale X='0.006378' Y='0.006378' Z='0.006378' />
+              <scale X='0.06378' Y='0.06378' Z='0.06378' />
               <models>
                 <model file="sphere.3d" />
               </models>
             </group>
             <group>
-              <translate X='0.783' Y='0' Z='0' />
+              <translate X='11.745' Y='0' Z='0' />
               <group>
-                <scale X='0.003393' Y='0.003393' Z='0.003393' />
+                <scale X='0.03393' Y='0.03393' Z='0.03393' />
                 <models>
                   <model file="sphere.3d" />
                 </models>
               </group>
               <group>
-                <translate X='5.504' Y='0' Z='0' />
+                <translate X='82.56' Y='0' Z='0' />
                 <group>
-                  <scale X='0.071398' Y='0.071398' Z='0.071398' />
+                  <scale X='0.71398' Y='0.71398' Z='0.71398' />
                   <models>
                     <model file="sphere.3d" />
                   </models>
                 </group>
                 <group>
-                  <models>
-                    <model file="disco.3d" />
-                  </models>
-                </group>
-                <group>
-                  <translate X='6.487' Y='0' Z='0' />
+                  <translate X='97.305' Y='0' Z='0' />
                   <group>
-                    <scale X='0.060330' Y='0.060330' Z='0.060330' />
+                    <scale X='0.60330' Y='0.60330' Z='0.60330' />
                     <models>
                       <model file="sphere.3d" />
                     </models>
                   </group>
                   <group>
-                    <scale X='0.060330' Y='0.060330' Z='0.060330' />
+                    <scale X='1.4033' Y='1.4033' Z='1.4033' />
                     <models>
-                      <model file="sphere.3d" />
+                      <model file="discosaturno.3d" />
                     </models>
                   </group>
                   <group>
-                    <translate X='14.440' Y='0' Z='0' />
+                    <translate X='216.6' Y='0' Z='0' />
                     <group>
-                      <scale X='0.025559' Y='0.025559' Z='0.025559' />
+                      <scale X='0.25559' Y='0.25559' Z='0.25559' />
                       <models>
                         <model file="sphere.3d" />
                       </models>
                     </group>
                     <group>
-                      <translate X='16.261' Y='0' Z='0' />
+                      <translate X='243.915' Y='0' Z='0' />
                       <group>
-                        <scale X='0.024300' Y='0.024300' Z='0.024300' />
+                        <scale X='0.24300' Y='0.24300' Z='0.24300' />
                         <models>
                           <model file="sphere.3d" />
                         </models>
                       </group>
                       <group>
-                        <translate X='14.159' Y='0' Z='0' />
+                        <translate X='212.385' Y='0' Z='0' />
                         <group>
-                          <scale X='0.001137' Y='0.001137' Z='0.001137' />\
+                          <scale X='0.01137' Y='0.01137' Z='0.01137' />\
                           <models>
                             <model file="sphere.3d" />
                           </models>

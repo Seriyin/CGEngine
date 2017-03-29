@@ -40,14 +40,13 @@ void assignBuffers()
 	there's a problem with duplicate keys or unrecognized tags.
 
 */
-void processModelsIntoVector(vector<Component*> &elements,XMLElement* &current) 
+void processModelsIntoVector(vector<Component*> &elements,XMLElement *current) 
 {
 	//ignora modelos vazios
 	if (!current->NoChildren())
 	{
-		XMLElement *last = current->LastChildElement("model");
 		current = current->FirstChildElement("model");
-		while (current != last && !strcmp(current->Value(), "model"))
+		while (current && !strcmp(current->Value(), "model"))
 		{
 			string path;
 			path.assign(current->Attribute("file"));
@@ -55,7 +54,6 @@ void processModelsIntoVector(vector<Component*> &elements,XMLElement* &current)
 			{
 				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
 				elements.push_back((Component *)(*modelmap)[path]);
-				current = current->NextSiblingElement();
 			}
 			else
 			{
@@ -72,37 +70,7 @@ void processModelsIntoVector(vector<Component*> &elements,XMLElement* &current)
 					elements.push_back((Component *)inserted_pair.first->second);
 				}
 			}
-		}
-		if (current == last)
-		{
-			string path;
-			path.assign(current->Attribute("file"));
-			if (modelmap->count(path))
-			{
-				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
-				elements.push_back((Component *)(*modelmap)[path]);
-				current = current->NextSiblingElement();
-			}
-			else
-			{
-				//slightly unsafe, no guarantee key is unique
-				//might not insert, and memory leak ensue
-				//if so, error report.
-				auto inserted_pair = modelmap->insert(make_pair(path, new ModelComponent(path)));
-				if (!inserted_pair.second)
-				{
-					cerr << "Duplicate key in model map" << endl;
-				}
-				else
-				{
-					elements.push_back((Component *)inserted_pair.first->second);
-				}
-			}
-		}
-		else
-		{
-			current = last;
-			cerr << "Unrecognized tag in models, may trigger unexpected behavior" << endl;
+			current = current->NextSiblingElement();
 		}
 	}
 }
@@ -325,25 +293,7 @@ SceneTree::SceneTree(const char *file)
 		if (current) 
 		{
 			current = current->FirstChildElement();
-			XMLElement *last = current->LastChildElement();
-			while (current && current != last)
-			{
-				if (!strcmp(current->Value(), "group"))
-				{
-					//on new group component recursively travel the group? or explicit stack based iteration?
-					//as is recursive
-					elements.push_back((Component *)new GroupComponent(current));
-				}
-				//Found a models tag, everything after should be model tags.
-				else if (!bFoundModels && !strcmp(current->Value(), "models"))
-				{
-					processModelsIntoVector(elements, current);
-					//Only one models tag processed per group/scene.
-					bFoundModels = true;
-				}
-				current = current->NextSiblingElement();
-			}
-			if (current)
+			for(;current;current= current->NextSiblingElement())
 			{
 				if (!strcmp(current->Value(), "group"))
 				{
@@ -508,7 +458,7 @@ void ModelComponent::assignBuffer(int index)
 	As such need to keep the current as a copy, not a reference to be used.
 
 */
-GroupComponent::GroupComponent(XMLElement* &current) : Component(true), order_vector {ID,ID,ID}
+GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vector {ID,ID,ID}
 {
 	elements.reserve(10);
 	//ignore empty groups
@@ -520,12 +470,10 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), order_ve
 		bool bFoundTranslate = false;
 		bool bFoundScale = false;
 		bool bFoundRotate = false;
-		//Need to know where group ends, store it in last
-		XMLElement *last = current->LastChildElement();
-		//current comes in at the group tag, exists after the group's end
+		//current comes in at the group tag.
 		current = current->FirstChildElement();
 
-		while (current != last)
+		for(;current;current = current->NextSiblingElement())
 		{
 			if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
 			{
@@ -564,44 +512,6 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), order_ve
 				//as is recursive
 				elements.push_back((Component *)new GroupComponent(current));
 			}
-			current = current->NextSiblingElement();
-		}
-		if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
-		{
-			translate.x = current->FloatAttribute("X", 0.0f);
-			translate.y = current->FloatAttribute("Y", 0.0f);
-			translate.z = current->FloatAttribute("Z", 0.0f);
-			order_vector[count++] = TR;
-			bFoundTranslate = true;
-		}
-		else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
-		{
-			rotate.x = current->FloatAttribute("axisX", 0.0f);
-			rotate.y = current->FloatAttribute("axisY", 0.0f);
-			rotate.z = current->FloatAttribute("axisZ", 0.0f);
-			rotate_angle = current->FloatAttribute("angle", 0.0f);
-			bFoundRotate = true;
-			order_vector[count++] = RT;
-		}
-		else if (!bFoundScale && !strcmp(current->Value(), "scale"))
-		{
-			scale.x = current->FloatAttribute("X", 0.0f);
-			scale.y = current->FloatAttribute("Y", 0.0f);
-			scale.z = current->FloatAttribute("Z", 0.0f);
-			bFoundScale = true;
-			order_vector[count++] = SC;
-		}
-		else if (!bFoundModels && !strcmp(current->Value(), "models"))
-		{
-			processModelsIntoVector(elements, current);
-			//Only one models tag processed per group/scene.
-			bFoundModels = true;
-		}
-		else if (!strcmp(current->Value(), "group"))
-		{
-			//on new group component recursively travel the group? or explicit stack based iteration?
-			//as is recursive
-			elements.push_back((Component *)new GroupComponent(current));
 		}
 	}
 }

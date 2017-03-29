@@ -152,7 +152,7 @@ public:
 	GroupComponent PushElement(Component& element);
 	*/
 	//Recursive?
-	GroupComponent(XMLElement* &current);
+	GroupComponent(XMLElement *current);
 	~GroupComponent();
 
 	void renderComponent();

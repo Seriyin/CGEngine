@@ -114,7 +114,27 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
       }
     }
-    
+
+	else if (!strcmp(argv[1], "flatdisk")) {
+		if ((argc == 6)) {
+			try {
+				float ir = stof(argv[2]), or = stof(argv[3]);
+				int slices = stoi(argv[4]);
+				fp.open(argv[5], ios::trunc);
+				generateFlatDiscus(fp, ir, or, slices);
+				fp.close();
+			}
+			catch (invalid_argument e) {
+				cerr << "Invalid type of arguments provided.";
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			cerr << ("Invalid number of arguments provided.");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	else if (!strcmp(argv[1], "cylinder")) {
 		if ((argc == 7)) {
 			try {

@@ -6,6 +6,8 @@
 #define P_Y camera_vals.radius*sin(camera_vals.beta)
 #define P_Z camera_vals.radius*cos(camera_vals.beta)*cos(camera_vals.alpha)
 
+//#define IMMEDIATE_MODE
+
 
 static Camera camera_vals;
 static SceneTree *scene;
@@ -38,10 +40,10 @@ void assignBuffers()
 	there's a problem with duplicate keys or unrecognized tags.
 
 */
-void processModelsIntoVector(vector<Component*>elements,XMLElement* &current) 
+void processModelsIntoVector(vector<Component*> &elements,XMLElement* &current) 
 {
 	//ignora modelos vazios
-	if (current->NoChildren())
+	if (!current->NoChildren())
 	{
 		XMLElement *last = current->LastChildElement("model");
 		current = current->FirstChildElement("model");
@@ -308,9 +310,12 @@ int main(int argc, char **argv)
 
 
 //Load from XML file and construct SceneTree
-//It also initializes the vector to 10 of size(groups are usually tiny)
-SceneTree::SceneTree(const char *file) : elements(10)
+//It also initializes the vector to 10 of capacity(groups are usually tiny)
+//TODO: Turns out next sibling does not go back to parent.
+//	As such need to keep the current as a copy, not a reference to be used.
+SceneTree::SceneTree(const char *file)
 {
+	elements.reserve(10);
 	bool bFoundModels = false;
 	XMLDocument x;
 	if (x.LoadFile(file) == XML_SUCCESS)
@@ -415,7 +420,7 @@ ModelComponent::ModelComponent(string model) : Component(false), model(move(mode
 {
 	//open file and populate vertices
 	ifstream fp;
-	fp.open(model);
+	fp.open(this->model);
 	string input;
 	getline(fp, input);
 	v_size = stoi(input);
@@ -495,15 +500,17 @@ void ModelComponent::assignBuffer(int index)
 	out into the scene and exit since on the last elements pointer never moves
 	forward.
 	
-	It also initializes the vector to 10 of size(groups are usually tiny)
+	It also initializes the vector to 10 of capacity(groups are usually tiny)
 	
 	Right now is recursive -> probly simpler
 
-	NEED TO DO: have a counter to know the order in which translate, rotate
-	and scale appear and store it in the op order array.
+	TODO: Turns out next sibling does not go back to parent.
+	As such need to keep the current as a copy, not a reference to be used.
+
 */
-GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements(10), order_vector {ID,ID,ID}
+GroupComponent::GroupComponent(XMLElement* &current) : Component(true), order_vector {ID,ID,ID}
 {
+	elements.reserve(10);
 	//ignore empty groups
 	if (!current->NoChildren()) 
 	{
@@ -557,7 +564,7 @@ GroupComponent::GroupComponent(XMLElement* &current) : Component(true), elements
 				//as is recursive
 				elements.push_back((Component *)new GroupComponent(current));
 			}
-			current->NextSiblingElement();
+			current = current->NextSiblingElement();
 		}
 		if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
 		{
@@ -618,7 +625,7 @@ GroupComponent::~GroupComponent()
 void GroupComponent::renderComponent()
 {
 	glPushMatrix();
-	for (int i; order_vector[i] != ID && i < 3; i++) 
+	for (int i=0; order_vector[i] != ID && i < 3; i++) 
 	{
 		switch (order_vector[i]) 
 		{

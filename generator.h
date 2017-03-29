@@ -13,4 +13,4 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks);
 void generateCone(ofstream& fp, float radius, float height, int slices, int stacks);
 void generateCylinder(ofstream& fp,float radius,float height,int slices,int stacks); //optional
 void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
-						int slices)
+						int slices);

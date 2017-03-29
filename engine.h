@@ -32,6 +32,11 @@ enum Op : unsigned char
 	ID, TR, RT, SC
 };
 
+enum ActiveCamera : unsigned char 
+{
+	FP, TP
+};
+
 typedef struct vector_struct
 {
 	//initialize a vector3D as a null vector
@@ -39,49 +44,24 @@ typedef struct vector_struct
 	float x, y, z;
 } Vector3D;
 
-typedef struct camera_struct
+typedef struct fp_camera_struct
 {
-	void postAlphaDecrease()
-	{
-		alpha -= 0.1f;
-		if (alpha <= -M_PI)
-		{
-			alpha = -M_PI + 0.00001f;
-		}
-	}
-
-	void postAlphaIncrease()
-	{
-		alpha += 0.1f;
-		if (alpha >= M_PI)
-		{
-			alpha = M_PI - 0.000001f;
-		}
-	}
-
-	void postBetaDecrease()
-	{
-		beta -= 0.1f;
-		if (beta <= -M_PI_2)
-		{
-			beta = -M_PI_2 + 0.00001f;
-		}
-	}
-
-	void postBetaIncrease()
-	{
-		beta += 0.1f;
-		if (beta >= M_PI_2)
-		{
-			beta = M_PI_2 - 0.00001f;
-		}
-	}
-
+	fp_camera_struct() : alpha(M_PI), beta(0.0f), k(0.2), 
+						 camX(15), camY(0), camZ(15) {}
 	//spherical coordinates based on alpha and beta angles + radius
-	float alpha = 0.0f;
-	float beta = 0.0f;
-	float radius = 5.0f;
-} Camera;
+	float alpha, beta, k;
+	float camX, camY, camZ;
+} FirstPersonCamera;
+
+typedef struct tp_camera_struct
+{
+	tp_camera_struct() : alpha(0.0f), beta(45.0f), radius(50.0f),
+						 startX(0), startY(0), tracking(0), 
+						 camX(0), camY(30), camZ(40) {}
+	float alpha, beta, radius;
+	int startX, startY, tracking;
+	float camX, camY, camZ;
+}ThirdPersonCamera;
 
 
 class SceneTree 

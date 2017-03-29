@@ -9,7 +9,9 @@
 //#define IMMEDIATE_MODE
 
 
-static Camera camera_vals;
+static FirstPersonCamera fpc;
+static ThirdPersonCamera tpc;
+static ActiveCamera activecamera = TP;
 static SceneTree *scene;
 static unordered_map<string, ModelComponent*> *modelmap;
 static GLuint* buffers;
@@ -107,13 +109,21 @@ void renderScene(void) {
 
 	// clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
 	// set the camera
 	glLoadIdentity();
-	gluLookAt(P_X, P_Y, P_Z,
-		0.0, 0.0, 0.0,
-		0.0f, 1.0f, 0.0f);
-
+	if (activecamera == FP)
+	{
+		gluLookAt(fpc.camX, 0, fpc.camZ,
+				  fpc.camX+sin(fpc.alpha), 0, fpc.camZ+cos(fpc.alpha),
+				  0.0f, 1.0f, 0.0f);
+	}
+	else 
+	{
+		gluLookAt(tpc.camX, tpc.camY, fpc.camZ,
+				  0.0, 0.0, 0.0,
+				  0.0f, 1.0f, 0.0f);
+	}
 	scene->renderTree();
 
 	// End of frame
@@ -122,103 +132,161 @@ void renderScene(void) {
 
 
 
-// write function to process keyboard events
-void processKeys(unsigned char key, int x, int y) 
+void processKeys(unsigned char key, int xx, int yy)
 {
-/*	switch (key) {
-	case 'a':
-		glutPostRedisplay();
-		break;
-	case 'd':
-		glutPostRedisplay();
-		break;
-	case 's':
-		glutPostRedisplay();
-		break;
-	case 'w':
-		glutPostRedisplay();
-		break;
-	case '+':
-		cilinder_vals.stacks++;
-		glutPostRedisplay();
-		break;
-	case '-':
-		cilinder_vals.stacks--;
-		glutPostRedisplay();
-		break;
-	case 'l':
-		cilinder_vals.slices--;
-		glutPostRedisplay();
-		break;
-	case 'u':
-		cilinder_vals.slices++;
-		glutPostRedisplay();
-		break;
-	default:
-		break;
+	if (activecamera == FP)
+	{
+		float dx, dz, rx, rz;
+		switch (key)
+		{
+		case 'a':fpc.alpha += 0.1f;
+			break;
+		case 'd':fpc.alpha -= 0.1f;
+			break;
+		case 'w':dx = sin(fpc.alpha);
+			dz = cos(fpc.alpha);
+			fpc.camX += fpc.k*dx;
+			fpc.camZ += fpc.k*dz;
+			break;
+		case 's':dx = sin(fpc.alpha);
+			dz = cos(fpc.alpha);
+			fpc.camX -= fpc.k*dx;
+			fpc.camZ -= fpc.k*dz;
+			break;
+		case 'q':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
+			dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
+			//dot product is calculated by assuming up
+			//vector is expressly (0,1,0), thus
+			//four terms disappear.
+			rx = -dz / sqrt(dz*dz + dx*dx);
+			rz = dx / sqrt(dz*dz + dx*dx);
+			fpc.camX -= fpc.k*rx;
+			fpc.camZ -= fpc.k*rz;
+			break;
+		case 'e':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
+			dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
+			rx = -dz / sqrt(dz*dz + dx*dx);
+			rz = dx / sqrt(dz*dz + dx*dx);
+			fpc.camX += fpc.k*rx;
+			fpc.camZ += fpc.k*rz;
+			break;
+		default: break;
+		}
 	}
-*/
 }
+
 
 void processSpecialKeys(int key_code, int x, int y) 
 {
 	switch (key_code)
 	{
-	case GLUT_KEY_DOWN:
-		camera_vals.postBetaDecrease();
-		glutPostRedisplay();
-		break;
-	case GLUT_KEY_UP:
-		camera_vals.postBetaIncrease();
-		glutPostRedisplay();
-		break;
-	case GLUT_KEY_LEFT:
-		camera_vals.postAlphaDecrease();
-		glutPostRedisplay();
-		break;
-	case GLUT_KEY_RIGHT:
-		camera_vals.postAlphaIncrease();
-		glutPostRedisplay();
-		break;
+	case GLUT_KEY_F1:activecamera = FP;
+					 break;
+	case GLUT_KEY_F2:activecamera = TP;
+					 break;
+	case GLUT_KEY_F3:glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					 glEnable(GL_CULL_FACE);
+					 glutPostRedisplay();
+					 break;
+	case GLUT_KEY_F4:glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					 glDisable(GL_CULL_FACE);
+					 glutPostRedisplay();
+					 break;
+	case GLUT_KEY_F5:glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+					 glDisable(GL_CULL_FACE);
+					 glutPostRedisplay();
+					 break;
 	default:break;
 	}
 
 }
 
-// write function to process menu events
-void mouse_primary_handler(int button, int state, int x, int y)
+void processMouseButtons(int button, int state, int xx, int yy) 
 {
-	static int mode;
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-		mode = (mode + 1) % 3;
-	switch (mode)
+	if (activecamera == TP)
 	{
-	case 0:
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_CULL_FACE);
-		glutPostRedisplay();
-		break;
-	case 1:
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDisable(GL_CULL_FACE);
-		glutPostRedisplay();
-		break;
-	case 2:
-		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-		glDisable(GL_CULL_FACE);
-		glutPostRedisplay();
-		break;
-	default:break;
+		if (state == GLUT_DOWN)
+		{
+			tpc.startX = xx;
+			tpc.startY = yy;
+			if (button == GLUT_LEFT_BUTTON)
+			{
+				tpc.tracking = 1;
+			}
+			else if (button == GLUT_RIGHT_BUTTON)
+			{
+				tpc.tracking = 2;
+			}
+			else 
+			{
+				tpc.tracking = 0;
+			}
+		}
+		else if (state == GLUT_UP) 
+		{
+			if (tpc.tracking == 1) 
+			{
+				tpc.alpha += (xx - tpc.startX);
+				tpc.beta += (yy - tpc.startY);
+			}
+			else if (tpc.tracking == 2)
+			{
+
+				tpc.radius -= yy - tpc.startY;
+				if (tpc.radius < 3) 
+				{
+					tpc.radius = 3.0;
+				}
+			}
+			tpc.tracking = 0;
+		}
 	}
 }
 
-void mouse_mov_handler(int x, int y)
+
+void processMouseMotion(int xx, int yy)
 {
-	/*
-	p_z = 1 - x ^ 2 - y ^ 2;
-	if p_z
-	*/
+	if (activecamera == TP) 
+	{
+		int deltaX, deltaY;
+		int alphaAux, betaAux;
+		int rAux;
+
+		if (!tpc.tracking)
+			return;
+
+		deltaX = xx - tpc.startX;
+		deltaY = yy - tpc.startY;
+
+		if (tpc.tracking == 1) 
+		{
+
+
+			alphaAux = tpc.alpha + deltaX;
+			betaAux = tpc.beta + deltaY;
+
+			if (betaAux > 85.0)
+				betaAux = 85.0;
+			else if (betaAux < -85.0)
+				betaAux = -85.0;
+
+			rAux = tpc.radius;
+		}
+		else if (tpc.tracking == 2) 
+		{
+
+			alphaAux = tpc.alpha;
+			betaAux = tpc.beta;
+			rAux = tpc.radius - deltaY;
+			if (rAux < 3)
+				rAux = 3;
+		}
+		tpc.camX = rAux * sin(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
+		tpc.camZ = rAux * cos(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
+		tpc.camY = rAux * 							     sin(betaAux * M_PI / 180.0);
+	}
 }
+
 
 
 
@@ -239,13 +307,14 @@ int main(int argc, char **argv)
 		// Required callback registry
 		glutDisplayFunc(renderScene);
 		glutReshapeFunc(changeSize);
+		glutIdleFunc(renderScene);
 
 
 		// put here the registration of the keyboard and menu callbacks
 		glutKeyboardFunc(processKeys);
 		glutSpecialFunc(processSpecialKeys);
-		glutMouseFunc(mouse_primary_handler);
-		glutPassiveMotionFunc(mouse_mov_handler);
+		glutMouseFunc(processMouseButtons);
+		glutPassiveMotionFunc(processMouseMotion);
 
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);

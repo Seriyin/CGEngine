@@ -73,6 +73,10 @@ void processModelsIntoVector(vector<Component*> &elements,XMLElement *current)
 			}
 			current = current->NextSiblingElement();
 		}
+		if (current) 
+		{
+			cerr << "Tag other than model in models, skipping rest of models..." << endl;
+		}
 	}
 }
 
@@ -410,6 +414,10 @@ SceneTree::SceneTree(const char *file)
 					//Only one models tag processed per group/scene.
 					bFoundModels = true;
 				}
+				else 
+				{
+					cerr << "Unrecognized tag in scene, skipping tag..." << endl;
+				}
 			}
 		}
 	}
@@ -613,6 +621,10 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 				//on new group component recursively travel the group? or explicit stack based iteration?
 				//as is recursive
 				elements.push_back((Component *)new GroupComponent(current));
+			}
+			else 
+			{
+				cerr << "Unrecognized tag in group, skipping tag..." << endl;
 			}
 		}
 	}

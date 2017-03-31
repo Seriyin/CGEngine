@@ -1,3 +1,5 @@
 <scene>
-	<model file="box.3d" />
+	<models>
+		<model file="box.3d" />
+	</models>
 </scene>

@@ -280,6 +280,11 @@ void processMouseMotion(int xx, int yy)
 			alphaAux = tpc.alpha + deltaX;
 			betaAux = tpc.beta + deltaY;
 
+			if (betaAux > 85.0)
+				betaAux = 85.0;
+			else if (betaAux < -85.0)
+				betaAux = -85.0;
+
 			rAux = tpc.radius;
 		}
 		else if (tpc.tracking == 2) 

@@ -15,7 +15,31 @@ int main(int argc, char* argv[]){
   else {
     ofstream fp;
 
-    if(!strcmp(argv[1],"plane")){
+	if (!strcmp(argv[1], "surface")) {
+		if ((argc == 5)) {
+			try {
+				int tesselation = stol(argv[2]);
+				ifstream patchfile;
+				fp.open(argv[4], ios::trunc);
+				patchfile.open(argv[3]);
+				generateFromPatches(fp, patchfile,tesselation);
+				fp.close();
+				patchfile.close();
+			}
+			catch (invalid_argument e) {
+				cerr << "Invalid type of arguments provided.";
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			cerr << "Invalid number of arguments provided.";
+			exit(EXIT_FAILURE);
+		}
+	}
+
+
+
+	else if(!strcmp(argv[1],"plane")){
       if((argc == 5)){
         try{
           float length = stof(argv[2]), width = stof(argv[3]);

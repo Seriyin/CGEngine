@@ -347,3 +347,10 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 		fp << outer_radius*cos(alpha + beta) << " " << 0 << " " << outer_radius*sin(alpha + beta) << " ";
 	}
 }
+
+void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
+{
+	/*
+		Implement here.
+	*/
+}

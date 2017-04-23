@@ -1,5 +1,24 @@
 #include "generator.h"
 
+void inline generateVerticesForPatch(float quad_result[][3],
+	float cur_bezier_ctrls[][4][4],
+	int bezier[][4],
+	int tessalation,
+	ofstream& fp);
+
+void inline calculateQuad(float quad_result[][3],
+	float cur_bezier_ctrls[][4][4],
+	int bezier[][4],
+	int i,
+	int j,
+	int tessalation);
+
+void inline multBezier(float u[4],
+	float vertex[3],
+	float P[][4][4],
+	int M[][4],
+	float v[4]);
+
 void generatePlane(ofstream& fp, float length, float width)
 {
 	fp << 6 << endl;
@@ -383,8 +402,10 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 	};
 	//Compute each coord based on each 16 ctrls coords
 	float cur_bezier_ctrls[3][4][4];
+	//4 vertices to build a quad
+	float quad_result[4][3];
 	//For each patch reuse the same matrix
-	for (int i = 0; i < n_patches; i++) 
+	for (int i = 0; i < n_patches; i++)
 	{
 		int c = 0;
 		for (int k=0; k < 4; k++) 
@@ -400,7 +421,7 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 				}
 			}
 		}
-		generateVerticesForPatch(cur_bezier_ctrls, bezier, 1.0 / tessalation, tessalation, fp);
+		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tessalation, fp);
 	}
 
 	delete patches;
@@ -410,13 +431,90 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 
 //Use counter-clockwise for vertex order excluively.
 //Generates the vertices straight to the file from one patch.
-void inline generateVerticesForPatch(float cur_bezier_ctrls[][4][4],
+//Will use shitty no memory algorithm. Will compute quad by quad
+//And so recompute half the vertexes every row.
+void inline generateVerticesForPatch(float quad_result[][3],
+									 float cur_bezier_ctrls[][4][4],
 									 int bezier[][4],
-									 float tess_step,
 									 int tessalation,
 									 ofstream& fp) 
 {
-	/*
-		Implement matrix multiplications
-	*/
+	for(int i=0;i<tessalation;i++) 
+	{
+		for (int j = 0; j < tessalation; j++) 
+		{
+			calculateQuad(quad_result, cur_bezier_ctrls, bezier, i , j, tessalation);
+			//Triangle from lower left corner to upper right corner to upper left corner
+			for (int k = 2; k >= 0; k--)
+			{
+				for (int l = 0; l<3; l++)
+				{
+					fp << quad_result[k][l] << " ";
+				}
+			}
+			//Triangle from upper right corner to lower left corner to lower right corner
+			for (int k = 1; k<4; k++)
+			{
+				for (int l = 0; l<3; l++)
+				{
+					fp << quad_result[k][l] << " ";
+				}
+			}
+
+		}
+	}
+}
+
+//Calculates all 4 vertices for a quad for one step in the tessalation.
+//Stores them into quad_result.
+void inline calculateQuad(float quad_result[][3],
+	float cur_bezier_ctrls[][4][4],
+	int bezier[][4],
+	int i,
+	int j,
+	int tessalation) 
+{
+	float u_cur_tess_step = i*1.0 / tessalation;
+	float u_next_tess_step = (i + 1)*1.0 / tessalation;
+	float v_cur_tess_step = j*1.0 / tessalation;
+	float v_next_tess_step = (j + 1)*1.0 / tessalation;
+	float uv[4][4] = 
+	{
+		{ u_cur_tess_step * u_cur_tess_step * u_cur_tess_step, u_cur_tess_step * u_cur_tess_step, u_cur_tess_step, 1},
+		{ u_next_tess_step * u_next_tess_step * u_next_tess_step, u_next_tess_step * u_next_tess_step, u_next_tess_step, 1 },
+		{ v_cur_tess_step * v_cur_tess_step * v_cur_tess_step, v_cur_tess_step * v_cur_tess_step, v_cur_tess_step, 1 },
+		{ v_next_tess_step * v_next_tess_step * v_next_tess_step, v_next_tess_step * v_next_tess_step, v_next_tess_step, 1 } 
+	};
+	multBezier(uv[0], quad_result[0], cur_bezier_ctrls, bezier, uv[2]);
+	multBezier(uv[1], quad_result[1], cur_bezier_ctrls, bezier, uv[2]);
+	multBezier(uv[0], quad_result[2], cur_bezier_ctrls, bezier, uv[3]);
+	multBezier(uv[1], quad_result[3], cur_bezier_ctrls, bezier, uv[3]);
+}
+
+void inline multBezier(float u[4], 
+					   float vertex[3], 
+					   float P[][4][4], 
+					   int M[][4], 
+					   float v[4]) 
+{
+	float interim_v[4];
+	float interim_m[3][4];
+	//M transpose v
+	for(int i=0;i<4;i++) 
+	{
+		interim_v[i] = M[i][0] * v[0] + M[i][1] * v[1] + M[i][2] * v[2] + M[i][3] * v[3];
+	}
+	//P[][] * Interim
+	for (int j = 0; j<3; j++) 
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			interim_m[j][i] = P[j][i][0] * v[0] + P[j][i][1] * v[1] + P[j][i][2] * v[2] + P[j][i][3] * v[3];
+		}
+	}
+	//U * M
+	//TODO
+
+	//vertex = UM Interim_M
+	//TODO
 }

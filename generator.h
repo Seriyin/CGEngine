@@ -16,8 +16,3 @@ void generateCylinder(ofstream& fp,float radius,float height,int slices,int stac
 void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 						int slices);
 void generateFromPatches(ofstream& fp, ifstream &patchfile, int tessalation);
-void inline generateVerticesForPatch(float cur_bezier_ctrls[][4][4],
-	int bezier[][4],
-	float tess_step,
-	int tessalation,
-	ofstream& fp);

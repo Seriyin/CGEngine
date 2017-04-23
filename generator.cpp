@@ -2,7 +2,7 @@
 
 void generatePlane(ofstream& fp, float length, float width)
 {
-	fp << 6 <<"\n";
+	fp << 6 << endl;
 
 	float pos_x = length / 2;
 	float pos_z = width / 2;
@@ -35,7 +35,7 @@ void generatePlane(ofstream& fp, float length, float width)
 
 void generateBox(ofstream& fp, float length, float height, float width) {
 
-		fp << 36 << "\n"; //6 sides * 3 vertices * 2 triangles
+		fp << 36 << endl; //6 sides * 3 vertices * 2 triangles
 		
 		//draw bottom side
 		fp << length / 2 << " " << 0 << " " << -width / 2 << " ";
@@ -100,7 +100,7 @@ void generateBox(ofstream& fp, float length, float height, float width, int divi
 	float z_step = width / divisions;
 	int x_pos = 0, y_pos = 0, z_pos = 0;
 
-	fp << 36 * divisions * divisions << "\n"; //6 sides * number of divisions+1^2 * 2 triangles per quad * 3 vertices
+	fp << 36 * divisions * divisions << endl; //6 sides * number of divisions+1^2 * 2 triangles per quad * 3 vertices
 
 	//draw bottom side
 	for (z_pos = 0; z_pos < divisions; z_pos++) {
@@ -188,7 +188,7 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 
 	j = -(((float)stacks) / ((float)2)); //j iterates through vert loops
 	i = 0; //i iterates through verts on each loop
-	fp << stacks*slices*6 << "\n"; //number of verts used
+	fp << stacks*slices*6 << endl; //number of verts used
 
 	while (j != ((float)stacks) / ((float)2)) {
 		l = radius*cos((j*(M_PI / (stacks)))); //distance of the vert to the axis
@@ -232,7 +232,7 @@ void generateCone(ofstream& fp, float radius, float height, int slices, int stac
 	i = 0; //i iterates through verts on each loop
 	count = 0;
 
-	fp << (stacks*slices * 6)+(3*slices) << "\n"; //number of verts used
+	fp << (stacks*slices * 6)+(3*slices) << endl; //number of verts used
 	baseAngle = atan((float)height / (float)radius); //base's angle
 
 	while (count!=stacks) {
@@ -286,7 +286,7 @@ void generateCylinder(ofstream& fp, float radius, float height, int slices, int 
 
 	float alpha = 0, beta = 0, stackheight = height / stacks;
 	int vertices = (int)(slices*(stacks+1)* 6);
-	fp << vertices << "\n";
+	fp << vertices << endl;
 	for (int i = 1; i <= slices; i++)
 	{
 		//Get alpha angle based on i
@@ -321,7 +321,7 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 {
 	float alpha = 0, beta = 0;
 	int vertices = (int)(slices * 6) * 2;
-	fp << vertices << "\n";
+	fp << vertices << endl;
 	for (int i = 1; i <= slices; i++) 
 	{
 		//Get alpha angle based on i
@@ -350,7 +350,73 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 
 void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 {
+	//Get number of patches and fill indexes in patch array
+	string line;
+	getline(patchfile, line);
+	int n_patches= atoi(line.data);
+	int *patches = new int[n_patches*16];
+	for (int i = 0; i < n_patches; i++) 
+	{
+		for (int j = 0; j < n_patches; j++) 
+		{
+			patchfile >> patches[i * 16 + j];
+		}
+	}
+	//Get number of control points and fill cntrlpoints array with every coord
+	//all in one continuous array
+	getline(patchfile, line);
+	int n_ctrlpnts = atoi(line.data);
+	float *ctrlpnts = new float[n_ctrlpnts*3];
+	for (int i = 0; i < n_ctrlpnts; i++) 
+	{
+		patchfile >> ctrlpnts[i];
+	}
+	//Set number of verts at the head of the file
+	int n_vert = n_patches * tessalation * tessalation;
+	fp << n_vert << endl;
+	int bezier[4][4] = 
+	{
+		{-1, 3, -3, 1},
+		{3, -6, 3, 0},
+		{-3, 3, 0, 0},
+		{1, 0, 0, 0}
+	};
+	//Compute each coord based on each 16 ctrls coords
+	float cur_bezier_ctrls[3][4][4];
+	//For each patch reuse the same matrix
+	for (int i = 0; i < n_patches; i++) 
+	{
+		int c = 0;
+		for (int k=0; k < 4; k++) 
+		{
+			for (int l = 0; l < 4; l++,c++) 
+			{
+				//Patches at c (In interval -> [0,16[) * 3 points to one set of 3 coords
+				//c is incremented only after updating x,y and z acording to the j offset
+				//for each coord.
+				for (int j = 0; j < 3; j++)
+				{
+					cur_bezier_ctrls[j][k][l] = ctrlpnts[i*16 + (patches[c] * 3 + j)];
+				}
+			}
+		}
+		generateVerticesForPatch(cur_bezier_ctrls, bezier, 1.0 / tessalation, tessalation, fp);
+	}
+
+	delete patches;
+	delete ctrlpnts;
+}
+
+
+//Use counter-clockwise for vertex order excluively.
+//Generates the vertices straight to the file from one patch.
+void inline generateVerticesForPatch(float cur_bezier_ctrls[][4][4],
+									 int bezier[][4],
+									 float tess_step,
+									 int tessalation,
+									 ofstream& fp) 
+{
 	/*
-		Implement here.
+		Implement matrix multiplications
 	*/
 }

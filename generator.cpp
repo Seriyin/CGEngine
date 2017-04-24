@@ -9,8 +9,8 @@ void inline generateVerticesForPatch(float quad_result[][3],
 void inline calculateQuad(float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
-	int i,
-	int j,
+	float u[][4],
+	float v[][4],
 	int tessalation);
 
 void inline multBezier(float u[4],
@@ -370,28 +370,31 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 {
 	//Get number of patches and fill indexes in patch array
-	string line;
-	getline(patchfile, line);
-	int n_patches= atoi(line.data);
+	int n_patches;
+	patchfile >> n_patches;
 	int *patches = new int[n_patches*16];
+	char virg;
 	for (int i = 0; i < n_patches; i++) 
 	{
-		for (int j = 0; j < n_patches; j++) 
+		for (int j = 0; j < 15; j++) 
 		{
-			patchfile >> patches[i * 16 + j];
+			patchfile >> patches[i * 16 + j] >> virg;
 		}
+		patchfile >> patches[i * 16 + 15];
 	}
 	//Get number of control points and fill cntrlpoints array with every coord
 	//all in one continuous array
-	getline(patchfile, line);
-	int n_ctrlpnts = atoi(line.data);
+	int n_ctrlpnts;
+	patchfile >> n_ctrlpnts;
 	float *ctrlpnts = new float[n_ctrlpnts*3];
 	for (int i = 0; i < n_ctrlpnts; i++) 
 	{
-		patchfile >> ctrlpnts[i];
+		patchfile >> ctrlpnts[i * 3] >> virg;
+		patchfile >> ctrlpnts[i * 3 + 1] >> virg;
+		patchfile >> ctrlpnts[i * 3 + 2];
 	}
 	//Set number of verts at the head of the file
-	int n_vert = n_patches * tessalation * tessalation;
+	int n_vert = n_patches * tessalation * tessalation * 6;
 	fp << n_vert << endl;
 	int bezier[4][4] = 
 	{
@@ -412,12 +415,12 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 		{
 			for (int l = 0; l < 4; l++,c++) 
 			{
-				//Patches at c (In interval -> [0,16[) * 3 points to one set of 3 coords
+				//Patches at c (In interval -> [0,16[) points to one set of 3 coords
 				//c is incremented only after updating x,y and z acording to the j offset
 				//for each coord.
 				for (int j = 0; j < 3; j++)
 				{
-					cur_bezier_ctrls[j][k][l] = ctrlpnts[i*16 + (patches[c] * 3 + j)];
+					cur_bezier_ctrls[j][k][l] = ctrlpnts[patches[i*16 + c]*3+j];
 				}
 			}
 		}
@@ -441,9 +444,23 @@ void inline generateVerticesForPatch(float quad_result[][3],
 {
 	for(int i=0;i<tessalation;i++) 
 	{
+		float u_cur_tess_step = i*1.0 / tessalation;
+		float u_next_tess_step = (i + 1)*1.0 / tessalation;
+		float u[2][4] =
+		{
+			{ u_cur_tess_step * u_cur_tess_step * u_cur_tess_step, u_cur_tess_step * u_cur_tess_step, u_cur_tess_step, 1 },
+			{ u_next_tess_step * u_next_tess_step * u_next_tess_step, u_next_tess_step * u_next_tess_step, u_next_tess_step, 1 }
+		};
 		for (int j = 0; j < tessalation; j++) 
 		{
-			calculateQuad(quad_result, cur_bezier_ctrls, bezier, i , j, tessalation);
+			float v_cur_tess_step = j*1.0 / tessalation;
+			float v_next_tess_step = (j + 1)*1.0 / tessalation;
+			float v[2][4] =
+			{
+				{ v_cur_tess_step * v_cur_tess_step * v_cur_tess_step, v_cur_tess_step * v_cur_tess_step, v_cur_tess_step, 1 },
+				{ v_next_tess_step * v_next_tess_step * v_next_tess_step, v_next_tess_step * v_next_tess_step, v_next_tess_step, 1 }
+			};
+			calculateQuad(quad_result, cur_bezier_ctrls, bezier, u , v, tessalation);
 			//Triangle from lower left corner to upper right corner to upper left corner
 			for (int k = 2; k >= 0; k--)
 			{
@@ -470,27 +487,18 @@ void inline generateVerticesForPatch(float quad_result[][3],
 void inline calculateQuad(float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
-	int i,
-	int j,
+	float u[][4],
+	float v[][4],
 	int tessalation) 
 {
-	float u_cur_tess_step = i*1.0 / tessalation;
-	float u_next_tess_step = (i + 1)*1.0 / tessalation;
-	float v_cur_tess_step = j*1.0 / tessalation;
-	float v_next_tess_step = (j + 1)*1.0 / tessalation;
-	float uv[4][4] = 
-	{
-		{ u_cur_tess_step * u_cur_tess_step * u_cur_tess_step, u_cur_tess_step * u_cur_tess_step, u_cur_tess_step, 1},
-		{ u_next_tess_step * u_next_tess_step * u_next_tess_step, u_next_tess_step * u_next_tess_step, u_next_tess_step, 1 },
-		{ v_cur_tess_step * v_cur_tess_step * v_cur_tess_step, v_cur_tess_step * v_cur_tess_step, v_cur_tess_step, 1 },
-		{ v_next_tess_step * v_next_tess_step * v_next_tess_step, v_next_tess_step * v_next_tess_step, v_next_tess_step, 1 } 
-	};
-	multBezier(uv[0], quad_result[0], cur_bezier_ctrls, bezier, uv[2]);
-	multBezier(uv[1], quad_result[1], cur_bezier_ctrls, bezier, uv[2]);
-	multBezier(uv[0], quad_result[2], cur_bezier_ctrls, bezier, uv[3]);
-	multBezier(uv[1], quad_result[3], cur_bezier_ctrls, bezier, uv[3]);
+	multBezier(u[0], quad_result[0], cur_bezier_ctrls, bezier, v[0]);
+	multBezier(u[1], quad_result[1], cur_bezier_ctrls, bezier, v[0]);
+	multBezier(u[0], quad_result[2], cur_bezier_ctrls, bezier, v[1]);
+	multBezier(u[1], quad_result[3], cur_bezier_ctrls, bezier, v[1]);
 }
 
+
+//Bezier Matrixes Multiplication
 void inline multBezier(float u[4], 
 					   float vertex[3], 
 					   float P[][4][4], 
@@ -513,8 +521,13 @@ void inline multBezier(float u[4],
 		}
 	}
 	//U * M
-	//TODO
-
+	for (int i = 0; i<4; i++)
+	{
+		interim_v[i] = M[i][0] * u[0] + M[i][1] * u[1] + M[i][2] * u[2] + M[i][3] * u[3];
+	}
 	//vertex = UM Interim_M
-	//TODO
+	for (int i = 0; i < 3; i++) 
+	{
+		vertex[i] = interim_v[0] * interim_m[i][0] + interim_v[1] * interim_m[i][1] + interim_v[2] * interim_m[i][2] + interim_v[3] * interim_m[i][3];
+	}
 }

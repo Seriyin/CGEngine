@@ -418,9 +418,10 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 				//Patches at c (In interval -> [0,16[) points to one set of 3 coords
 				//c is incremented only after updating x,y and z acording to the j offset
 				//for each coord.
+				int index = patches[i * 16 + c];
 				for (int j = 0; j < 3; j++)
 				{
-					cur_bezier_ctrls[j][k][l] = ctrlpnts[patches[i*16 + c]*3+j];
+					cur_bezier_ctrls[j][k][l] = ctrlpnts[index*3+j];
 				}
 			}
 		}
@@ -444,8 +445,8 @@ void inline generateVerticesForPatch(float quad_result[][3],
 {
 	for(int i=0;i<tessalation;i++) 
 	{
-		float u_cur_tess_step = i*1.0 / tessalation;
-		float u_next_tess_step = (i + 1)*1.0 / tessalation;
+		float u_cur_tess_step = i*1.0 / (tessalation - 1);
+		float u_next_tess_step = (i + 1)*1.0 / (tessalation - 1);
 		float u[2][4] =
 		{
 			{ u_cur_tess_step * u_cur_tess_step * u_cur_tess_step, u_cur_tess_step * u_cur_tess_step, u_cur_tess_step, 1 },
@@ -453,8 +454,8 @@ void inline generateVerticesForPatch(float quad_result[][3],
 		};
 		for (int j = 0; j < tessalation; j++) 
 		{
-			float v_cur_tess_step = j*1.0 / tessalation;
-			float v_next_tess_step = (j + 1)*1.0 / tessalation;
+			float v_cur_tess_step = j*1.0 / (tessalation - 1);
+			float v_next_tess_step = (j + 1)*1.0 / (tessalation - 1);
 			float v[2][4] =
 			{
 				{ v_cur_tess_step * v_cur_tess_step * v_cur_tess_step, v_cur_tess_step * v_cur_tess_step, v_cur_tess_step, 1 },
@@ -517,7 +518,7 @@ void inline multBezier(float u[4],
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			interim_m[j][i] = P[j][i][0] * v[0] + P[j][i][1] * v[1] + P[j][i][2] * v[2] + P[j][i][3] * v[3];
+			interim_m[j][i] = P[j][i][0] * interim_v[0] + P[j][i][1] * interim_v[1] + P[j][i][2] * interim_v[2] + P[j][i][3] * interim_v[3];
 		}
 	}
 	//U * M

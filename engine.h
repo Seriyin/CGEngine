@@ -29,7 +29,7 @@ class GroupComponent;
 
 enum Op : unsigned char 
 {
-	ID, TR, RT, SC
+	ID, TR, RT, SC, ANT, ANR
 };
 
 enum ActiveCamera : unsigned char 
@@ -41,6 +41,7 @@ typedef struct vector_struct
 {
 	//initialize a vector3D as a null vector
 	vector_struct() : x(0.0f), y(0.0f), z(0.0f) {}
+	vector_struct(float x, float y, float z) : x(x), y(y), z(z) {}
 	float x, y, z;
 } Vector3D;
 
@@ -113,6 +114,7 @@ class GroupComponent : public Component
 {
 private:
 	//Each group component can only have one transform and one rotate
+	AnimationComponent animation;
 	Vector3D translate;
 	Vector3D scale;
 	Vector3D rotate;
@@ -136,4 +138,22 @@ public:
 	~GroupComponent();
 
 	void renderComponent();
+};
+
+class AnimationComponent : public Component
+{
+	friend GroupComponent;
+private:
+	float curve_time;
+	float curve_step;
+	vector<Vector3D> catmull_points;
+	Vector3D rotate;
+	float rotate_time;
+
+public:
+	AnimationComponent();
+	bool getAnimFromPoints(float time, XMLElement *current);
+
+	void renderComponent();
+	void rotate();
 };

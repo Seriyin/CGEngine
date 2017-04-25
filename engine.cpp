@@ -14,6 +14,15 @@ static ActiveCamera activecamera = TP;
 static SceneTree *scene;
 static unordered_map<string, ModelComponent*> *modelmap;
 static GLuint* buffers;
+static float timestamp;
+
+static float catmull_rom[4][4] =
+{
+	{-0.5,1.5,-1.5,0.5},
+	{1,-2.5,2,-0.5},
+	{-0.5,0,0.5,0},
+	{0,1,0,0}
+};
 
 /*
 	Assigns buffers to every model component in model map.
@@ -108,7 +117,8 @@ void changeSize(int w, int h) {
 
 
 
-void renderScene(void) {
+void renderScene(void) 
+{
 
 	// clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -143,22 +153,20 @@ void processKeys(unsigned char key, int xx, int yy)
 		switch (key)
 		{
 		case 'a':fpc.alpha += 0.1f;
-				 glutPostRedisplay(); 
 				 break;
 		case 'd':fpc.alpha -= 0.1f;
-				 glutPostRedisplay();
 				 break;
 		case 'w':dx = sin(fpc.alpha);
 				 dz = cos(fpc.alpha);
 				 fpc.camX += fpc.k*dx;
 				 fpc.camZ += fpc.k*dz;
-				 glutPostRedisplay();
+				 
 				 break;
 		case 's':dx = sin(fpc.alpha);
 				 dz = cos(fpc.alpha);
 				 fpc.camX -= fpc.k*dx;
 				 fpc.camZ -= fpc.k*dz;
-				 glutPostRedisplay();
+				 
 				 break;
 		case 'q':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
 				 dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
@@ -169,7 +177,7 @@ void processKeys(unsigned char key, int xx, int yy)
 				 rz = dx / sqrt(dz*dz + dx*dx);
 				 fpc.camX -= fpc.k*rx;
 				 fpc.camZ -= fpc.k*rz;
-				 glutPostRedisplay();
+				 
 				 break;
 		case 'e':dx = (fpc.camX + sin(fpc.alpha)) - fpc.camX;
 				 dz = (fpc.camZ + cos(fpc.alpha)) - fpc.camZ;
@@ -177,7 +185,7 @@ void processKeys(unsigned char key, int xx, int yy)
 				 rz = dx / sqrt(dz*dz + dx*dx);
 				 fpc.camX += fpc.k*rx;
 				 fpc.camZ += fpc.k*rz;
-				 glutPostRedisplay();
+				 
 				 break;
 		case '+':fpc.k *= 2;
 				 break;
@@ -194,22 +202,17 @@ void processSpecialKeys(int key_code, int x, int y)
 	switch (key_code)
 	{
 	case GLUT_KEY_F1:activecamera = FP;
-					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F2:activecamera = TP;
-					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F3:glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					 glEnable(GL_CULL_FACE);
-					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F4:glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					 glDisable(GL_CULL_FACE);
-					 glutPostRedisplay();
 					 break;
 	case GLUT_KEY_F5:glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 					 glDisable(GL_CULL_FACE);
-					 glutPostRedisplay();
 					 break;
 	default:break;
 	}
@@ -254,7 +257,6 @@ void processMouseButtons(int button, int state, int xx, int yy)
 				}
 			}
 			tpc.tracking = 0;
-			glutPostRedisplay();
 		}
 	}
 }
@@ -299,7 +301,6 @@ void processMouseMotion(int xx, int yy)
 		tpc.camX = rAux * sin(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
 		tpc.camZ = rAux * cos(alphaAux * M_PI / 180.0) * cos(betaAux * M_PI / 180.0);
 		tpc.camY = rAux * 							     sin(betaAux * M_PI / 180.0);
-		glutPostRedisplay();
 	}
 }
 
@@ -342,6 +343,7 @@ int main(int argc, char **argv)
 
 		// Required callback registry
 		glutDisplayFunc(renderScene);
+		glutIdleFunc(renderScene);
 		glutReshapeFunc(changeSize);
 
 
@@ -385,8 +387,6 @@ int main(int argc, char **argv)
 
 //Load from XML file and construct SceneTree
 //It also initializes the vector to 10 of capacity(groups are usually tiny)
-//TODO: Turns out next sibling does not go back to parent.
-//	As such need to keep the current as a copy, not a reference to be used.
 SceneTree::SceneTree(const char *file)
 {
 	elements.reserve(10);
@@ -437,6 +437,7 @@ SceneTree::~SceneTree()
 //Render every component through Tree
 void SceneTree::renderTree()
 {
+	timestamp = glutGet(GLUT_ELAPSED_TIME)/1000.0f;
 	for each (Component* var in elements)
 	{
 		var->renderComponent();
@@ -562,10 +563,7 @@ void ModelComponent::assignBuffer(int index)
 	
 	It also initializes the vector to 10 of capacity(groups are usually tiny)
 	
-	Right now is recursive -> probly simpler
-
-	TODO: Turns out next sibling does not go back to parent.
-	As such need to keep the current as a copy, not a reference to be used.
+	Right now is recursive -> definitely simpler
 
 */
 GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vector {ID,ID,ID}
@@ -587,26 +585,47 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 		{
 			if (!bFoundTranslate && !strcmp(current->Value(), "translate"))
 			{
-				translate.x = current->FloatAttribute("X", 0.0f);
-				translate.y = current->FloatAttribute("Y", 0.0f);
-				translate.z = current->FloatAttribute("Z", 0.0f);
+				if (!current->NoChildren())
+				{
+					if (animation.getAnimFromPoints(current->FloatAttribute("time", 0.0f),
+						current->FirstChildElement())) 
+					{
+						order_vector[count++] = ANT;
+					}
+				}
+				else
+				{
+					translate = Vector3D(current->FloatAttribute("X", 0.0f),
+										 current->FloatAttribute("Y", 0.0f),
+										 current->FloatAttribute("Z", 0.0f));
+					order_vector[count++] = TR;
+				}
 				bFoundTranslate = true;
-				order_vector[count++] = TR;
 			}
 			else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
 			{
-				rotate.x = current->FloatAttribute("axisX", 0.0f);
-				rotate.y = current->FloatAttribute("axisY", 0.0f);
-				rotate.z = current->FloatAttribute("axisZ", 0.0f);
+				rotate = Vector3D(current->FloatAttribute("axisX", 0.0f),
+								  current->FloatAttribute("axisY", 0.0f),
+								  current->FloatAttribute("axisZ", 0.0f));
 				rotate_angle = current->FloatAttribute("angle", 0.0f);
+				float rotate_time;
+				if ((rotate_time = current->FloatAttribute("time", -1.0f) > -0.000001f)) 
+				{
+					animation.rotate_time = rotate_time;
+					animation.rotate = rotate;
+					order_vector[count++] = ANR;
+				}
+				else 
+				{
+					order_vector[count++] = RT;
+				}
 				bFoundRotate = true;
-				order_vector[count++] = RT;
 			}
 			else if (!bFoundScale && !strcmp(current->Value(), "scale"))
 			{
-				scale.x = current->FloatAttribute("X", 0.0f);
-				scale.y = current->FloatAttribute("Y", 0.0f);
-				scale.z = current->FloatAttribute("Z", 0.0f);
+				scale = Vector3D(current->FloatAttribute("X", 0.0f),
+								 current->FloatAttribute("Y", 0.0f),
+								 current->FloatAttribute("Z", 0.0f));
 				bFoundScale = true;
 				order_vector[count++] = SC;
 			}
@@ -644,7 +663,8 @@ GroupComponent::~GroupComponent()
 * This method involves following the order of operations present in the original XML.
 * An ID operation means do nothing. If there is nothing to do for a given position
 * than there is nothing to do in the following, otherwise there would have been one
-* of the other three operations to do (either Translate, Rotate and Scale).
+* of the other five operations to do (either Translate, Translate w/ catmull-rom curve
+* Rotate, Rotate over time, and Scale).
 */
 void GroupComponent::renderComponent()
 {
@@ -659,6 +679,10 @@ void GroupComponent::renderComponent()
 					 break;
 			case SC: glScalef(scale.x, scale.y, scale.z);
 					 break;
+			case ANT: animation.renderComponent();
+					  break;
+			case ANR: animation.rotate();
+					  break;
 			default: break;
 		}
 	}
@@ -667,4 +691,58 @@ void GroupComponent::renderComponent()
 		var->renderComponent();
 	}
 	glPopMatrix();
+}
+
+
+AnimationComponent::AnimationComponent() : Component(true)
+{
+	catmull_points.reserve(4);
+}
+
+
+//Constructs a catmull_points vector from a current XMLElement pointing to a 'point' tag.
+//Also initializes the catmull curve time;
+bool AnimationComponent::getAnimFromPoints(float time, XMLElement * current) 
+{
+	curve_time = time;
+	for (; current; current = current->NextSiblingElement())
+	{
+		catmull_points.push_back(
+			Vector3D(current->FloatAttribute("X", 0.0f),
+					 current->FloatAttribute("Y", 0.0f),
+					 current->FloatAttribute("Z", 0.0f)
+					)
+							  );
+	}
+	if (catmull_points.size() < 4) 
+	{
+		cerr << "Not Enough Points For Catmull-Rom Curve";
+		//swap with nothing means destroy everything
+		vector<Vector3D>().swap(catmull_points);
+	}
+	else 
+	{
+		curve_step = curve_time / (catmull_points.size() - 2) ;
+	}
+	return catmull_points.size() < 4;
+}
+
+//Use timestamp at start of frame draw to 
+//compute a translate on the catmull-rom curve
+void AnimationComponent::renderComponent()
+{
+	//TODO: this
+	float gt = timestamp - (((int)floor(timestamp / curve_time)) * curve_time);
+	int step = floor(gt / curve_step);
+	float t = gt - (step * curve_step);
+	float result[3];
+//	getCatmullRomPoint(t,catmull_points[step]);
+//	Vector3D translate()
+}
+
+//Use timestamp at start of frame draw to
+//compute a degree of rotation in specified axis
+void AnimationComponent::rotate() 
+{
+	//TODO: this
 }

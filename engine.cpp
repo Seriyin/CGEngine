@@ -1,6 +1,9 @@
 #include "engine.h"
 
 
+void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vector3D &p3, float *res);
+
+
 //#define P_X camera_vals.radius*cos(camera_vals.beta)*sin(camera_vals.alpha)
 //#define P_Y camera_vals.radius*sin(camera_vals.beta)
 //#define P_Z camera_vals.radius*cos(camera_vals.beta)*cos(camera_vals.alpha)
@@ -681,7 +684,7 @@ void GroupComponent::renderComponent()
 					 break;
 			case ANT: animation.renderComponent();
 					  break;
-			case ANR: animation.rotate();
+			case ANR: animation.rotate_();
 					  break;
 			default: break;
 		}
@@ -714,35 +717,62 @@ bool AnimationComponent::getAnimFromPoints(float time, XMLElement * current)
 					)
 							  );
 	}
-	if (catmull_points.size() < 4) 
+	if (catmull_points.size() >= 4) 
+	{
+		curve_step = curve_time / (catmull_points.size());
+	}
+	else 
 	{
 		cerr << "Not Enough Points For Catmull-Rom Curve";
 		//swap with nothing means destroy everything
 		vector<Vector3D>().swap(catmull_points);
 	}
-	else 
-	{
-		curve_step = curve_time / (catmull_points.size() - 2) ;
-	}
-	return catmull_points.size() < 4;
+	return catmull_points.size() >= 4;
 }
 
 //Use timestamp at start of frame draw to 
 //compute a translate on the catmull-rom curve
 void AnimationComponent::renderComponent()
 {
-	//TODO: this
+	int size = catmull_points.size();
 	float gt = timestamp - (((int)floor(timestamp / curve_time)) * curve_time);
 	int step = floor(gt / curve_step);
 	float t = gt - (step * curve_step);
 	float result[3];
-//	getCatmullRomPoint(t,catmull_points[step]);
-//	Vector3D translate()
+	getCatmullRomPoint(t,catmull_points[step%size],catmull_points[(step+1)%size], catmull_points[(step + 2)%size], catmull_points[(step + 3)%size], result);
+	glTranslatef(result[0], result[1], result[2]);
+}
+
+void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vector3D &p3, float *res) 
+{
+	float T[4] = { t*t*t, t*t, t, 1 };
+	float A[3][4];
+	for (int i = 0; i < 4; i++)
+	{
+		A[0][i] = catmull_rom[i][0] * p0.x + catmull_rom[i][1] * p1.x +
+				  catmull_rom[i][2] * p2.x + catmull_rom[i][3] * p3.x;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		A[1][i] = catmull_rom[i][0] * p0.y + catmull_rom[i][1] * p1.y +
+				  catmull_rom[i][2] * p2.y + catmull_rom[i][3] * p3.y;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		A[2][i] = catmull_rom[i][0] * p0.z + catmull_rom[i][1] * p1.z +
+				  catmull_rom[i][2] * p2.z + catmull_rom[i][3] * p3.z;
+	}
+	for (int i=0; i<3; i++) 
+	{
+		res[i] = T[0] * A[i][0] + T[1] * A[i][1] + T[2] * A[i][2] + T[3] * A[i][3];
+	}
 }
 
 //Use timestamp at start of frame draw to
 //compute a degree of rotation in specified axis
-void AnimationComponent::rotate() 
+void AnimationComponent::rotate_() 
 {
-	//TODO: this
+	float gt = timestamp - (((int)floor(timestamp / rotate_time)) * rotate_time);
+	float rt = gt/rotate_time * 360.0f;
+	glRotatef(rt, rotate.x, rotate.y, rotate.z);
 }

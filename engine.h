@@ -25,6 +25,7 @@ using namespace tinyxml2;
 class SceneTree;
 class Component;
 class ModelComponent;
+class AnimationComponent;
 class GroupComponent;
 
 enum Op : unsigned char 
@@ -110,6 +111,26 @@ class ModelComponent : public Component
 		void assignBuffer(int index);
 };
 
+
+class AnimationComponent : public Component
+{
+	friend GroupComponent;
+private:
+	float curve_time;
+	float curve_step;
+	vector<Vector3D> catmull_points;
+	Vector3D rotate;
+	float rotate_time;
+
+public:
+	AnimationComponent();
+	bool getAnimFromPoints(float time, XMLElement *current);
+
+	void renderComponent();
+	void rotate_();
+};
+
+
 class GroupComponent : public Component
 {
 private:
@@ -140,20 +161,3 @@ public:
 	void renderComponent();
 };
 
-class AnimationComponent : public Component
-{
-	friend GroupComponent;
-private:
-	float curve_time;
-	float curve_step;
-	vector<Vector3D> catmull_points;
-	Vector3D rotate;
-	float rotate_time;
-
-public:
-	AnimationComponent();
-	bool getAnimFromPoints(float time, XMLElement *current);
-
-	void renderComponent();
-	void rotate();
-};

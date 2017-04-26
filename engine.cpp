@@ -611,8 +611,8 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 								  current->FloatAttribute("axisY", 0.0f),
 								  current->FloatAttribute("axisZ", 0.0f));
 				rotate_angle = current->FloatAttribute("angle", 0.0f);
-				float rotate_time;
-				if ((rotate_time = current->FloatAttribute("time", -1.0f) > -0.000001f)) 
+				float rotate_time = current->FloatAttribute("time", -1.0f);
+				if (rotate_time > -0.000001f) 
 				{
 					animation.rotate_time = rotate_time;
 					animation.rotate = rotate;
@@ -719,7 +719,7 @@ bool AnimationComponent::getAnimFromPoints(float time, XMLElement * current)
 	}
 	if (catmull_points.size() >= 4) 
 	{
-		curve_step = curve_time / (catmull_points.size());
+		curve_step = curve_time / (catmull_points.size() - 2);
 	}
 	else 
 	{
@@ -732,16 +732,21 @@ bool AnimationComponent::getAnimFromPoints(float time, XMLElement * current)
 
 //Use timestamp at start of frame draw to 
 //compute a translate on the catmull-rom curve
+//catmull-rom curves are strictly considered non-looping.
+//
+//To make a catmull-rom curve which loops provide the
+//extra points equal to the starting points.
 void AnimationComponent::renderComponent()
 {
-	int size = catmull_points.size();
+	int size = catmull_points.size() -2;
 	float gt = timestamp - (((int)floor(timestamp / curve_time)) * curve_time);
 	int step = floor(gt / curve_step);
-	float t = gt - (step * curve_step);
+	float t = (gt - (step * curve_step)) / curve_step;
 	float result[3];
 	getCatmullRomPoint(t,catmull_points[step%size],catmull_points[(step+1)%size], catmull_points[(step + 2)%size], catmull_points[(step + 3)%size], result);
 	glTranslatef(result[0], result[1], result[2]);
 }
+
 
 void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vector3D &p3, float *res) 
 {

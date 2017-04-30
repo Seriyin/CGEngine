@@ -4,7 +4,7 @@ void inline generateVerticesForPatch(
 	float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
-	int tessalation,
+	int tesselation,
 	float *v,
 	ofstream& fp);
 
@@ -14,7 +14,7 @@ void inline calculateQuad(
 	int bezier[][4],
 	float *u,
 	float *v,
-	int tessalation);
+	int tesselation);
 
 void inline multBezier(
 	float *u,
@@ -371,7 +371,7 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 	}
 }
 
-void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
+void generateFromPatches(ofstream & fp, ifstream & patchfile, int tesselation)
 {
 	//Get number of patches and fill indexes in patch array
 	int n_patches;
@@ -398,7 +398,7 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 		patchfile >> ctrlpnts[i * 3 + 2];
 	}
 	//Set number of verts at the head of the file
-	int n_vert = n_patches * tessalation * tessalation * 6;
+	int n_vert = n_patches * tesselation * tesselation * 6;
 	fp << n_vert << endl;
 	int bezier[4][4] = 
 	{
@@ -412,7 +412,16 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 	//4 vertices to build a quad
 	float quad_result[4][3];
 	//v can be reused as both u and v, needs careful pointer arithmetic
-	float *v = new float[tessalation * 4];
+	float *v = new float[tesselation * 4];
+	for (int j = 0; j < tesselation; j++)
+	{
+		float v_cur_tess_step = (float)j*1.0f / (float)(tesselation - 1);
+		v[4 * j] = v_cur_tess_step * v_cur_tess_step * v_cur_tess_step;
+		v[(4 * j) + 1] = v_cur_tess_step * v_cur_tess_step;
+		v[(4 * j) + 2] = v_cur_tess_step;
+		v[(4 * j) + 3] = 1;
+	}
+
 	
 	//For each patch reuse the same matrix
 	for (int i = 0; i < n_patches; i++)
@@ -432,7 +441,7 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 				}
 			}
 		}
-		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tessalation, v, fp);
+		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tesselation, v, fp);
 	}
 	delete v;
 	delete patches;
@@ -447,23 +456,15 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 void inline generateVerticesForPatch(float quad_result[][3],
 									 float cur_bezier_ctrls[][4][4],
 									 int bezier[][4],
-									 int tessalation,
+									 int tesselation,
 									 float *v,
 									 ofstream& fp) 
 {
-	for (int j = 0; j < tessalation; j++)
+	for (int i = 0; i < (tesselation-1); i++)
 	{
-		float v_cur_tess_step = j*1.0 / (tessalation - 1);
-		v[4 * j] = v_cur_tess_step * v_cur_tess_step * v_cur_tess_step;
-		v[4 * j + 1] = v_cur_tess_step * v_cur_tess_step;
-		v[4 * j + 2] = v_cur_tess_step;
-		v[4 * j + 3] = 1;
-	}
-	for (int i = 0; i<tessalation; i++)
-	{
-		for (int j = 0; j <= tessalation; j++)
+		for (int j = 0; j < (tesselation-1); j++)
 		{
-			calculateQuad(quad_result, cur_bezier_ctrls, bezier, v+(i*4) , v+(j*4), tessalation);
+			calculateQuad(quad_result, cur_bezier_ctrls, bezier, v+(i*4) , v+(j*4), tesselation);
 			//Triangle from lower left corner to upper right corner to upper left corner
 			for (int k = 2; k >= 0; k--)
 			{
@@ -485,14 +486,14 @@ void inline generateVerticesForPatch(float quad_result[][3],
 	}
 }
 
-//Calculates all 4 vertices for a quad for one step in the tessalation.
+//Calculates all 4 vertices for a quad for one step in the tesselation.
 //Stores them into quad_result.
 void inline calculateQuad(float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
 	float *u,
 	float *v,
-	int tessalation) 
+	int tesselation) 
 {
 	multBezier(u, quad_result[0], cur_bezier_ctrls, bezier, v);
 	multBezier(u+4, quad_result[1], cur_bezier_ctrls, bezier, v);

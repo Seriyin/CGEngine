@@ -1,23 +1,27 @@
 #include "generator.h"
 
-void inline generateVerticesForPatch(float quad_result[][3],
+void inline generateVerticesForPatch(
+	float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
 	int tessalation,
+	float *v,
 	ofstream& fp);
 
-void inline calculateQuad(float quad_result[][3],
+void inline calculateQuad(
+	float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
-	float u[][4],
-	float v[][4],
+	float *u,
+	float *v,
 	int tessalation);
 
-void inline multBezier(float u[4],
+void inline multBezier(
+	float *u,
 	float vertex[3],
 	float P[][4][4],
 	int M[][4],
-	float v[4]);
+	float *v);
 
 void generatePlane(ofstream& fp, float length, float width)
 {
@@ -407,6 +411,9 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 	float cur_bezier_ctrls[3][4][4];
 	//4 vertices to build a quad
 	float quad_result[4][3];
+	//v can be reused as both u and v, needs careful pointer arithmetic
+	float *v = new float[tessalation * 4];
+	
 	//For each patch reuse the same matrix
 	for (int i = 0; i < n_patches; i++)
 	{
@@ -425,9 +432,9 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tessalation)
 				}
 			}
 		}
-		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tessalation, fp);
+		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tessalation, v, fp);
 	}
-
+	delete v;
 	delete patches;
 	delete ctrlpnts;
 }
@@ -441,27 +448,22 @@ void inline generateVerticesForPatch(float quad_result[][3],
 									 float cur_bezier_ctrls[][4][4],
 									 int bezier[][4],
 									 int tessalation,
+									 float *v,
 									 ofstream& fp) 
 {
-	for(int i=0;i<tessalation;i++) 
+	for (int j = 0; j < tessalation; j++)
 	{
-		float u_cur_tess_step = i*1.0 / (tessalation - 1);
-		float u_next_tess_step = (i + 1)*1.0 / (tessalation - 1);
-		float u[2][4] =
+		float v_cur_tess_step = j*1.0 / (tessalation - 1);
+		v[4 * j] = v_cur_tess_step * v_cur_tess_step * v_cur_tess_step;
+		v[4 * j + 1] = v_cur_tess_step * v_cur_tess_step;
+		v[4 * j + 2] = v_cur_tess_step;
+		v[4 * j + 3] = 1;
+	}
+	for (int i = 0; i<tessalation; i++)
+	{
+		for (int j = 0; j <= tessalation; j++)
 		{
-			{ u_cur_tess_step * u_cur_tess_step * u_cur_tess_step, u_cur_tess_step * u_cur_tess_step, u_cur_tess_step, 1 },
-			{ u_next_tess_step * u_next_tess_step * u_next_tess_step, u_next_tess_step * u_next_tess_step, u_next_tess_step, 1 }
-		};
-		for (int j = 0; j < tessalation; j++) 
-		{
-			float v_cur_tess_step = j*1.0 / (tessalation - 1);
-			float v_next_tess_step = (j + 1)*1.0 / (tessalation - 1);
-			float v[2][4] =
-			{
-				{ v_cur_tess_step * v_cur_tess_step * v_cur_tess_step, v_cur_tess_step * v_cur_tess_step, v_cur_tess_step, 1 },
-				{ v_next_tess_step * v_next_tess_step * v_next_tess_step, v_next_tess_step * v_next_tess_step, v_next_tess_step, 1 }
-			};
-			calculateQuad(quad_result, cur_bezier_ctrls, bezier, u , v, tessalation);
+			calculateQuad(quad_result, cur_bezier_ctrls, bezier, v+(i*4) , v+(j*4), tessalation);
 			//Triangle from lower left corner to upper right corner to upper left corner
 			for (int k = 2; k >= 0; k--)
 			{
@@ -488,23 +490,23 @@ void inline generateVerticesForPatch(float quad_result[][3],
 void inline calculateQuad(float quad_result[][3],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
-	float u[][4],
-	float v[][4],
+	float *u,
+	float *v,
 	int tessalation) 
 {
-	multBezier(u[0], quad_result[0], cur_bezier_ctrls, bezier, v[0]);
-	multBezier(u[1], quad_result[1], cur_bezier_ctrls, bezier, v[0]);
-	multBezier(u[0], quad_result[2], cur_bezier_ctrls, bezier, v[1]);
-	multBezier(u[1], quad_result[3], cur_bezier_ctrls, bezier, v[1]);
+	multBezier(u, quad_result[0], cur_bezier_ctrls, bezier, v);
+	multBezier(u+4, quad_result[1], cur_bezier_ctrls, bezier, v);
+	multBezier(u, quad_result[2], cur_bezier_ctrls, bezier, v+4);
+	multBezier(u+4, quad_result[3], cur_bezier_ctrls, bezier, v+4);
 }
 
 
 //Bezier Matrixes Multiplication
-void inline multBezier(float u[4], 
+void inline multBezier(float *u, 
 					   float vertex[3], 
 					   float P[][4][4], 
 					   int M[][4], 
-					   float v[4]) 
+					   float *v) 
 {
 	float interim_v[4];
 	float interim_m[3][4];

@@ -7,7 +7,7 @@
   </group>
 
   <group>
-    <translate time='8.7969'>
+    <translate time='0.87969'>
       <point X='0' Y='0' Z='12.5657' />
       <point X='2.5586' Y='0' Z='11.9197' />
       <point X='4.8668' Y='0' Z='10.1422' />
@@ -38,7 +38,7 @@
   </group>
 
   <group>
-    <translate time='22.4701'>
+    <translate time='2.24701'>
       <point X='0' Y='0' Z='16.341' />
       <point X='5.096' Y='0' Z='15.5431' />
       <point X='9.5705' Y='0' Z='13.2166' />
@@ -69,7 +69,7 @@
   </group>
 
   <group>
-    <translate time='36.5256'>
+    <translate time='3.65256'>
       <point X='0' Y='0' Z='22.8012' />
       <point X='6.8722' Y='0' Z='21.6331' />
       <point X='13.001' Y='0' Z='18.2998' />
@@ -108,7 +108,7 @@
   </group>
 
   <group>
-    <translate time='68.6980'>
+    <translate time='6.86980'>
       <point X='0' Y='0' Z='37.3697' />
       <point X='9.5764' Y='0' Z='35.4216' />
       <point X='18.2154' Y='0' Z='29.9623' />
@@ -139,7 +139,7 @@
   </group>
 
   <group>
-    <translate time='433.2589'>
+    <translate time='4.332589'>
       <point X='0' Y='0' Z='122.5129' />
       <point X='34.3239' Y='0' Z='116.2467' />
       <point X='65.2881' Y='0' Z='98.4514' />
@@ -170,7 +170,7 @@
   </group>
 
   <group>
-    <translate time='1075.922'>
+    <translate time='10.75922'>
       <point X='0' Y='0' Z='227.184' />
       <point X='62.6916' Y='0' Z='215.3872' />
       <point X='119.2467' Y='0' Z='182.0596' />
@@ -209,7 +209,7 @@
   </group>
 
   <group>
-    <translate time='3068.54'>
+    <translate time='30.6854'>
       <point X='0' Y='0' Z='454.5981' />
       <point X='127.0657' Y='0' Z='431.4713' />
       <point X='241.6939' Y='0' Z='365.7248' />
@@ -240,7 +240,7 @@
   </group>
 
   <group>
-    <translate time='6018.9'>
+    <translate time='60.189'>
       <point X='0' Y='0' Z='628.8872' />
       <point X='179.0956' Y='0' Z='597.2582' />
       <point X='340.6609' Y='0' Z='506.918' />
@@ -271,7 +271,7 @@
   </group>
 
   <group>
-    <translate time='9056'>
+    <translate time='90.56'>
       <point X='0' Y='0' Z='1106.1327' />
       <point X='205.6561' Y='0' Z='1042.803' />
       <point X='391.1822' Y='0' Z='873.1343' />
@@ -302,7 +302,7 @@
   </group>
 
   <group>
-    <translate time='3000'>
+    <translate time='30'>
       <point X='-33.8942' Y='6.8121' Z='10.1671' />
       <point X='-27.5367' Y='23.7357' Z='7.5254' />
       <point X='-7.6575' Y='38.9075' Z='-0.0975' />

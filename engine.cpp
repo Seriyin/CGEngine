@@ -610,16 +610,15 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 				rotate = Vector3D(current->FloatAttribute("axisX", 0.0f),
 								  current->FloatAttribute("axisY", 0.0f),
 								  current->FloatAttribute("axisZ", 0.0f));
-				rotate_angle = current->FloatAttribute("angle", 0.0f);
 				float rotate_time = current->FloatAttribute("time", -1.0f);
 				if (rotate_time > -0.000001f) 
 				{
-					animation.rotate_time = rotate_time;
-					animation.rotate = rotate;
+					rtt_angortime = rotate_time;
 					order_vector[count++] = ANR;
 				}
 				else 
 				{
+					rtt_angortime = current->FloatAttribute("angle", 0.0f);
 					order_vector[count++] = RT;
 				}
 				bFoundRotate = true;
@@ -678,13 +677,13 @@ void GroupComponent::renderComponent()
 		{
 			case TR: glTranslatef(translate.x, translate.y, translate.z);
 					 break;
-			case RT: glRotatef(rotate_angle, rotate.x, rotate.y, rotate.z);
+			case RT: glRotatef(rtt_angortime, rotate.x, rotate.y, rotate.z);
 					 break;
 			case SC: glScalef(scale.x, scale.y, scale.z);
 					 break;
 			case ANT: animation.renderComponent();
 					  break;
-			case ANR: animation.rotate_();
+			case ANR: rotate_();
 					  break;
 			default: break;
 		}
@@ -694,6 +693,15 @@ void GroupComponent::renderComponent()
 		var->renderComponent();
 	}
 	glPopMatrix();
+}
+
+//Use timestamp at start of frame draw to
+//compute a degree of rotation in specified axis
+void GroupComponent::rotate_()
+{
+	float gt = timestamp - (((int)floor(timestamp / rtt_angortime)) * rtt_angortime);
+	float rt = gt / rtt_angortime * 360.0f;
+	glRotatef(rt, rotate.x, rotate.y, rotate.z);
 }
 
 
@@ -773,11 +781,3 @@ void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vecto
 	}
 }
 
-//Use timestamp at start of frame draw to
-//compute a degree of rotation in specified axis
-void AnimationComponent::rotate_() 
-{
-	float gt = timestamp - (((int)floor(timestamp / rotate_time)) * rotate_time);
-	float rt = gt/rotate_time * 360.0f;
-	glRotatef(rt, rotate.x, rotate.y, rotate.z);
-}

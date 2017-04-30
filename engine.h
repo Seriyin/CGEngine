@@ -119,15 +119,12 @@ private:
 	float curve_time;
 	float curve_step;
 	vector<Vector3D> catmull_points;
-	Vector3D rotate;
-	float rotate_time;
 
 public:
 	AnimationComponent();
 	bool getAnimFromPoints(float time, XMLElement *current);
 
 	void renderComponent();
-	void rotate_();
 };
 
 
@@ -139,7 +136,10 @@ private:
 	Vector3D translate;
 	Vector3D scale;
 	Vector3D rotate;
-	float rotate_angle;
+	//rtt_angortime can function to store the rotation time for a 360º rotation
+	//or a fixed rotation angle
+	float rtt_angortime;
+
 	//vector that holds which operation to do first, second and third.
 	Op order_vector[3];
 
@@ -159,5 +159,6 @@ public:
 	~GroupComponent();
 
 	void renderComponent();
+	void rotate_();
 };
 

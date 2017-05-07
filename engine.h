@@ -16,6 +16,7 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "Vector3D.h"
 
 #define ANG2RAD M_PI/180.0
 
@@ -28,6 +29,8 @@ class ModelComponent;
 class AnimationComponent;
 class GroupComponent;
 
+
+
 enum Op : unsigned char 
 {
 	ID, TR, RT, SC, ANT, ANR
@@ -38,13 +41,6 @@ enum ActiveCamera : unsigned char
 	FP, TP
 };
 
-typedef struct vector_struct
-{
-	//initialize a vector3D as a null vector
-	vector_struct() : x(0.0f), y(0.0f), z(0.0f) {}
-	vector_struct(float x, float y, float z) : x(x), y(y), z(z) {}
-	float x, y, z;
-} Vector3D;
 
 typedef struct fp_camera_struct
 {
@@ -99,9 +95,11 @@ class ModelComponent : public Component
 	private:
 		string model;
 		int bound_buffer_index;
+		int bound_normals_index;
 		//Use as a giant pile of vertices you go through as an array
 		int v_size;
 		Vector3D* vertices;
+		Vector3D* normals;
 	
 	public:
 		ModelComponent(const char *model);

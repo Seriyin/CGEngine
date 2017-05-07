@@ -1,19 +1,22 @@
 <scene>
-	<group>
-		<translate time="10">
-			<point X="-8" Y="-8" Z="0" />
-			<point X="-8" Y="8" Z="0" />
-			<point X="8" Y="8" Z="0" />
-			<point X="0" Y="0" Z="0" />
-			<point X="8" Y="-8" Z="0" />
-      <point X="-8" Y="-8" Z="0" />
-      <point X="-8" Y="8" Z="0" />
-    </translate>
-    <rotate time="3" axisX="1" axisY="0" axisZ="0" />
-    <models>
-			<model file="teapot.3d" />
-		</models>
-	</group>
+  <group>
+    <translate X="0" Y="0" Z="5" />
+    <group>
+      <translate time="10">
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+        <point X="8" Y="8" Z="0" />
+        <point X="0" Y="0" Z="0" />
+        <point X="8" Y="-8" Z="0" />
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+      </translate>
+      <rotate time="3" axisX="1" axisY="0" axisZ="0" />
+      <models>
+        <model file="teapot.3d" />
+      </models>
+    </group>   
+  </group>	 
   <group>
     <translate X="0" Y="0" Z="-5" />
     <group>
@@ -33,7 +36,7 @@
     </group>
   </group>
   <group>
-    <translate X="0" Y="0" Z="5" />
+    <translate X="0" Y="0" Z="-10" />
     <group>
       <translate time="10">
         <point X="-8" Y="-8" Z="0" />

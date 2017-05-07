@@ -37,8 +37,8 @@ include_directories(${OpenGL_INCLUDE_DIRS})
 link_directories(${OpenGL_LIBRARY_DIRS})
 add_definitions(${OpenGL_DEFINITIONS})
 
-add_executable(${PROJECT_NAME} engine.cpp engine.h tinyxml2.cpp tinyxml2.h)
-add_executable(generator interpreter.cpp generator.h generator.cpp)
+add_executable(${PROJECT_NAME} engine.cpp engine.h Vector3D.cpp Vector3D.h tinyxml2.cpp tinyxml2.h)
+add_executable(generator interpreter.cpp generator.h generator.cpp Vector3D.cpp Vector3D.h)
 
 
 if (WIN32)

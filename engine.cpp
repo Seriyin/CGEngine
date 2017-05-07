@@ -17,7 +17,10 @@ static ActiveCamera activecamera = TP;
 static SceneTree *scene;
 static unordered_map<string, ModelComponent*> *modelmap;
 static GLuint* buffers;
+static GLuint* normals_buf;
 static float timestamp;
+
+static float blue[4] = { 0.1f,0.1f,1.0f, 1.0f };
 
 static float catmull_rom[4][4] =
 {
@@ -140,6 +143,11 @@ void renderScene(void)
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 	}
+	float o[4] = { 0.0f, 10.0f, 0.0f, 0.0f };
+	float l[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, o);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, l);
+
 	scene->renderTree();
 
 	// End of frame
@@ -359,13 +367,20 @@ int main(int argc, char **argv)
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+
 
 		glewInit();
 		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+
 
 		//initialize enough buffers for models in modelmap
 		buffers = new GLuint[modelmap->size()];
+		normals_buf = new GLuint[modelmap->size()];
 		glGenBuffers(modelmap->size(), buffers);
+		glGenBuffers(modelmap->size(), normals_buf);
 
 		//assign said buffers to every model in modelmap
 		assignBuffers();
@@ -462,10 +477,12 @@ ModelComponent::ModelComponent(const char* model) : Component(false), model(mode
 	getline(fp, input);
 	v_size = stoi(input);
 	vertices = new Vector3D[v_size];
+	normals = new Vector3D[v_size];
 	//really unsafe code
 	for(int i=0;i<v_size;i++) 
 	{
 		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
+		fp >> normals[i].x >> normals[i].y >> normals[i].z;
 	}
 	/* debug
 	for (int i = 0; i < v_size; i++) 
@@ -489,10 +506,12 @@ ModelComponent::ModelComponent(string model) : Component(false), model(move(mode
 	getline(fp, input);
 	v_size = stoi(input);
 	vertices = new Vector3D[v_size];
+	normals = new Vector3D[v_size];
 	//really unsafe code
 	for (int i = 0; i<v_size; i++)
 	{
 		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
+		fp >> normals[i].x >> normals[i].y >> normals[i].z;
 	}
 	/* debug
 	for (int i = 0; i < v_size; i++)
@@ -507,6 +526,7 @@ ModelComponent::ModelComponent(string model) : Component(false), model(move(mode
 ModelComponent::~ModelComponent()
 {
 	delete vertices;
+	delete normals;
 }
 
 /*
@@ -528,8 +548,14 @@ void ModelComponent::renderComponent()
 		glEnd();
 	}
 #else
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, blue);
+
 	glBindBuffer(GL_ARRAY_BUFFER, buffers[bound_buffer_index]);
 	glVertexPointer(3, GL_FLOAT, 0, 0);
+
+	glBindBuffer(GL_NORMAL_ARRAY, normals_buf[bound_normals_index]);
+	glNormalPointer(GL_FLOAT, 0, 0);
+
 	glDrawArrays(GL_TRIANGLES, 0, v_size);
 #endif
 }
@@ -542,8 +568,13 @@ void ModelComponent::renderComponent()
 void ModelComponent::assignBuffer(int index)
 {
 	bound_buffer_index = index;
+	bound_normals_index = index;
+
 	glBindBuffer(GL_ARRAY_BUFFER, buffers[index]);
-	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(Vector3D),vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*vertices),vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, normals_buf[index]);
+	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*normals), normals, GL_STATIC_DRAW);
 }
 
 

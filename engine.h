@@ -7,6 +7,7 @@
 #else
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <IL/il.h>
 #endif
 #include <vector>
 #include <unordered_map>
@@ -16,7 +17,7 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "Vector3D.h"
+#include "VectorMath.h"
 
 #define ANG2RAD M_PI/180.0
 
@@ -26,6 +27,7 @@ using namespace tinyxml2;
 class SceneTree;
 class Component;
 class ModelComponent;
+class TextureComponent;
 class AnimationComponent;
 class GroupComponent;
 
@@ -94,12 +96,14 @@ class ModelComponent : public Component
 {
 	private:
 		string model;
-		int bound_buffer_index;
-		int bound_normals_index;
+		int bound_buffer_index, bound_normals_index;
+		int bound_tex_coord_index;
+
 		//Use as a giant pile of vertices you go through as an array
 		int v_size;
 		Vector3D* vertices;
 		Vector3D* normals;
+		Vector2D* tex_coords;
 	
 	public:
 		ModelComponent(const char *model);
@@ -158,5 +162,35 @@ public:
 
 	void renderComponent();
 	void rotate_();
+};
+
+class TextureComponent : public Component 
+{
+private:
+	unsigned int width, height, tex_index, il_index;
+	unsigned char *texData;
+	string texture;
+
+public :
+	TextureComponent(string path);
+
+	void renderComponent();
+
+	void assignBuffer(int index);
+};
+
+class MaterialComponent : public Component
+{
+	private:
+		float diffuse[4];
+		float ambient[4];
+		float specular[4];
+		float emissive[4];
+		float shininess;
+
+	public:
+		MaterialComponent(float *RGB, float *specular, float *emissive, float *ambient, float shininess);
+
+		void renderComponent();
 };
 

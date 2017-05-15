@@ -16,11 +16,48 @@ static ThirdPersonCamera tpc;
 static ActiveCamera activecamera = TP;
 static SceneTree *scene;
 static unordered_map<string, ModelComponent*> *modelmap;
-static GLuint* buffers;
-static GLuint* normals_buf;
+static unordered_map<string, TextureComponent*> *texturemap;
 static float timestamp;
 
-static float blue[4] = { 0.1f,0.1f,1.0f, 1.0f };
+static struct material_defaults 
+{
+	float diffuse[4], specular[4], emissive[4], ambient[4], shininess;
+	
+	material_defaults() : 
+		diffuse{ 0.8f, 0.8f, 0.8f, 1.0f },
+		specular{ 0.0f, 0.0f, 0.0f, 1.0f },
+		emissive{ 0.0f, 0.0f, 0.0f, 1.0f },
+		ambient{ 0.2f, 0.2f, 0.2f, 1.0f },
+		shininess(0.0f) {}
+
+} MaterialDefaults;
+
+static struct gl_buffers 
+{
+	GLuint *model_coord_buf, *normals_buf, *tex_coord_buf, *tex_buf;
+
+	gl_buffers() : 
+		model_coord_buf(nullptr),
+		normals_buf(nullptr),
+		tex_coord_buf(nullptr),
+		tex_buf(nullptr) {}
+
+
+	gl_buffers(int models, int textures) :
+		model_coord_buf(new GLuint(models)),
+		normals_buf(new GLuint(models)),
+		tex_coord_buf(new GLuint(models)),
+		tex_buf(new GLuint(textures)) {}
+
+	~gl_buffers()
+	{
+		delete(model_coord_buf);
+		delete(normals_buf);
+		delete(tex_coord_buf);
+		delete(tex_buf);
+	}
+} GLBuffers;
+
 
 static float catmull_rom[4][4] =
 {
@@ -29,6 +66,7 @@ static float catmull_rom[4][4] =
 	{-0.5,0,0.5,0},
 	{0,1,0,0}
 };
+
 
 /*
 	Assigns buffers to every model component in model map.
@@ -44,6 +82,121 @@ void assignBuffers()
 	{
 		var.second->assignBuffer(i++);
 	}
+	i = 0;
+	for each(const auto var in (*texturemap))
+	{
+		var.second->assignBuffer(i++);
+	}
+
+}
+
+/*
+	Checks for material attributes to build a material component.
+
+	If no material attributes are present build default material.
+	
+	Checks for a single texture path to build a TextureComponent.
+
+	MaterialComponent is pushed into a group's elements before the
+	TextureComponent to allow material definition before any binding
+	takes place.
+
+	TextureComponent is pushed into a group's elements before the
+	ModelComponent to allow texture binding before model drawing.
+*/
+void processModelAttributes(vector<Component*> &elements,XMLElement *current)
+{
+	float diffuse[4], specular[4], emissive[4], ambient[4], shininess;
+	if (current->Attribute("diffR") || current->Attribute("diffG") ||
+		current->Attribute("diffB") || current->Attribute("diffA")) 
+	{
+		diffuse[0] = current->FloatAttribute("diffR");
+		diffuse[1] = current->FloatAttribute("diffG");
+		diffuse[2] = current->FloatAttribute("diffB");
+		diffuse[3] = current->FloatAttribute("diffA");
+	}
+	else 
+	{
+		for (int i = 0; i < 4; i++) 
+		{
+			diffuse[i] = MaterialDefaults.diffuse[i];
+		}
+	}
+	if (current->Attribute("specR") || current->Attribute("specG") ||
+		current->Attribute("specB") || current->Attribute("specA"))
+	{
+		specular[0] = current->FloatAttribute("specR");
+		specular[1] = current->FloatAttribute("specG");
+		specular[2] = current->FloatAttribute("specB");
+		specular[3] = current->FloatAttribute("specA");
+	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			specular[i] = MaterialDefaults.specular[i];
+		}
+	}
+	if (current->Attribute("emisR") || current->Attribute("emisG") ||
+		current->Attribute("emisB") || current->Attribute("emisA"))
+	{
+		emissive[0] = current->FloatAttribute("emisR");
+		emissive[1] = current->FloatAttribute("emisG");
+		emissive[2] = current->FloatAttribute("emisB");
+		emissive[3] = current->FloatAttribute("emisA");
+	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			emissive[i] = MaterialDefaults.emissive[i];
+		}
+	}
+	if (current->Attribute("ambiR") || current->Attribute("ambiG") ||
+		current->Attribute("ambiB") || current->Attribute("ambiA"))
+	{
+		ambient[0] = current->FloatAttribute("ambiR");
+		ambient[1] = current->FloatAttribute("ambiG");
+		ambient[2] = current->FloatAttribute("ambiB");
+		ambient[3] = current->FloatAttribute("ambiA");
+	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			ambient[i] = MaterialDefaults.ambient[i];
+		}
+	}
+	shininess = current->FloatAttribute("shine", MaterialDefaults.shininess);
+	elements.push_back((Component *) new MaterialComponent(diffuse,specular,
+														   emissive,ambient,
+														   shininess));
+	
+	string texture = current->Attribute("texture");
+	if (!texture.empty()) 
+	{
+		if (texturemap->count(texture))
+		{
+			//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
+			elements.push_back((Component *)(*modelmap)[texture]);
+		}
+		else
+		{
+			//slightly unsafe, no guarantee key is unique
+			//might not insert, and memory leak ensue
+			//if so, error report.
+			auto inserted_pair = texturemap->insert(make_pair(texture, new TextureComponent(texture)));
+			if (!inserted_pair.second)
+			{
+				cerr << "Duplicate key in model map" << endl;
+			}
+			else
+			{
+				elements.push_back((Component *)inserted_pair.first->second);
+			}
+		}
+	}
+
 }
 
 /*
@@ -66,6 +219,7 @@ void processModelsIntoVector(vector<Component*> &elements,XMLElement *current)
 		{
 			string path;
 			path.assign(current->Attribute("file"));
+			processModelAttributes(elements, current);
 			if (modelmap->count(path))
 			{
 				//Found a model tag: try and get the file path into a ModelComponent and push it into the vector
@@ -343,6 +497,7 @@ int main(int argc, char **argv)
 	if (argc == 2)
 	{
 		modelmap = new unordered_map<string, ModelComponent*>(10);
+		texturemap = new unordered_map<string, TextureComponent*>(10);
 		scene = new SceneTree(argv[1]);
 
 		// init GLUT and the window
@@ -368,21 +523,29 @@ int main(int argc, char **argv)
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);
+		glEnable(GL_TEXTURE_2D);
 
 
 		glewInit();
+		ilInit();
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
-
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		
+		int model_size = modelmap->size();
+		int tex_size = texturemap->size();
 
 		//initialize enough buffers for models in modelmap
-		buffers = new GLuint[modelmap->size()];
-		normals_buf = new GLuint[modelmap->size()];
-		glGenBuffers(modelmap->size(), buffers);
-		glGenBuffers(modelmap->size(), normals_buf);
+		//and textures in texturemap
+		GLBuffers = struct gl_buffers(model_size, tex_size);
+		glGenBuffers(model_size, GLBuffers.model_coord_buf);
+		glGenBuffers(model_size, GLBuffers.normals_buf);
+		glGenBuffers(model_size, GLBuffers.tex_coord_buf);
+		glGenBuffers(tex_size, GLBuffers.tex_buf);
+
 
 		//assign said buffers to every model in modelmap
+		//and every texture in texturemap
 		assignBuffers();
 
 		printUIInfo();
@@ -507,16 +670,18 @@ ModelComponent::ModelComponent(string model) : Component(false), model(move(mode
 	v_size = stoi(input);
 	vertices = new Vector3D[v_size];
 	normals = new Vector3D[v_size];
+	tex_coords = new Vector2D[v_size];
 	//really unsafe code
 	for (int i = 0; i<v_size; i++)
 	{
-		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
-		fp >> normals[i].x >> normals[i].y >> normals[i].z;
+		vertices[i].fillVector(fp);
+		normals[i].fillVector(fp);
+		tex_coords[i].fillVector(fp);
 	}
 	/* debug
 	for (int i = 0; i < v_size; i++)
 	{
-	cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << "\r\n";
+	cout << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << endl;
 	}
 	all the vertices where loaded successfully
 	*/
@@ -548,15 +713,20 @@ void ModelComponent::renderComponent()
 		glEnd();
 	}
 #else
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, blue);
 
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[bound_buffer_index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.model_coord_buf[bound_buffer_index]);
 	glVertexPointer(3, GL_FLOAT, 0, 0);
 
-	glBindBuffer(GL_NORMAL_ARRAY, normals_buf[bound_normals_index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.normals_buf[bound_normals_index]);
+	glNormalPointer(GL_FLOAT, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.tex_coord_buf[bound_normals_index]);
 	glNormalPointer(GL_FLOAT, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, v_size);
+
+	//Reset texture
+	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 }
 
@@ -569,12 +739,17 @@ void ModelComponent::assignBuffer(int index)
 {
 	bound_buffer_index = index;
 	bound_normals_index = index;
+	bound_tex_coord_index = index;
 
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.model_coord_buf[index]);
 	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*vertices),vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, normals_buf[index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.normals_buf[index]);
 	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*normals), normals, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.tex_coord_buf[index]);
+	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*tex_coords), tex_coords, GL_STATIC_DRAW);
+
 }
 
 
@@ -812,3 +987,78 @@ void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vecto
 	}
 }
 
+
+/*
+	Builds a texture using DevIL, keeps all the texture data.
+	A TextureComponent necessitates a ModelComponent.
+*/
+TextureComponent::TextureComponent(string path) : Component(false), texture(move(path))
+{
+	ilEnable(IL_ORIGIN_SET);
+	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+	ilGenImages(1, &il_index);
+	ilBindImage(il_index);
+	ilLoadImage((ILstring)path.c_str());
+	width = ilGetInteger(IL_IMAGE_WIDTH);
+	height = ilGetInteger(IL_IMAGE_HEIGHT);
+	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+	texData = ilGetData();
+
+}
+
+/*
+	Rendering the texture involves only binding the texture.
+	Every ModelComponent will bind the null texture after drawing.
+	So far this limits models to one single texture.
+*/
+void TextureComponent::renderComponent()
+{
+	glBindTexture(GL_TEXTURE_2D, tex_index);
+}
+
+
+/*
+	Generates the 2D texture in OpenGL, and saves the index of 
+	the generated texture.
+*/
+void TextureComponent::assignBuffer(int index)
+{
+	tex_index = index;
+
+	glBindTexture(GL_TEXTURE_2D, GLBuffers.tex_coord_buf[tex_index]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+}
+
+
+/*
+	Constructor for MaterialComponent with all parameters, assumes no null vectors,
+	non-existant attributes are assumed to be substituted by default OpenGL parameters
+	prior to construction.
+*/
+MaterialComponent::MaterialComponent(float *RGB, float *specular, float *emissive, float *ambient, float shininess) :
+	Component(false), 
+	diffuse{ RGB[0], RGB[1], RGB[2], RGB[3] },
+	specular{ specular[0], specular[1], specular[2], specular[3] },
+	emissive{ emissive[0], emissive[1], emissive[2], emissive[3] },
+	ambient{ ambient[0], ambient[1], ambient[2], ambient[3] },
+	shininess( shininess) {}
+
+
+void MaterialComponent::renderComponent()
+{
+	glMaterialfv(GL_FRONT, GL_EMISSION, emissive);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}

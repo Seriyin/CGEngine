@@ -1,5 +1,5 @@
 #include "generator.h"
-#include "Vector3D.h"
+#include "VectorMath.h"
 
 void inline generateVerticesForPatch(
 	Vector3D quad_result[8],

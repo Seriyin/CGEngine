@@ -32,11 +32,11 @@ static struct material_defaults
 
 } MaterialDefaults;
 
-static struct gl_buffers 
+static struct gl_buffers
 {
 	GLuint *model_coord_buf, *normals_buf, *tex_coord_buf, *tex_buf;
 
-	gl_buffers() : 
+	gl_buffers() :
 		model_coord_buf(nullptr),
 		normals_buf(nullptr),
 		tex_coord_buf(nullptr),
@@ -44,10 +44,10 @@ static struct gl_buffers
 
 
 	gl_buffers(int models, int textures) :
-		model_coord_buf(new GLuint(models)),
-		normals_buf(new GLuint(models)),
-		tex_coord_buf(new GLuint(models)),
-		tex_buf(new GLuint(textures)) {}
+		model_coord_buf(new GLuint[models]),
+		normals_buf(new GLuint[models]),
+		tex_coord_buf(new GLuint[models]),
+		tex_buf(new GLuint[textures]) {}
 
 	~gl_buffers()
 	{
@@ -56,7 +56,7 @@ static struct gl_buffers
 		delete(tex_coord_buf);
 		delete(tex_buf);
 	}
-} GLBuffers;
+} *GLBuffers;
 
 
 static float catmull_rom[4][4] =
@@ -172,7 +172,8 @@ void processModelAttributes(vector<Component*> &elements,XMLElement *current)
 														   emissive,ambient,
 														   shininess));
 	
-	string texture = current->Attribute("texture");
+	string texture;
+	texture.assign(current->Attribute("texture"));
 	if (!texture.empty()) 
 	{
 		if (texturemap->count(texture))
@@ -182,17 +183,24 @@ void processModelAttributes(vector<Component*> &elements,XMLElement *current)
 		}
 		else
 		{
-			//slightly unsafe, no guarantee key is unique
-			//might not insert, and memory leak ensue
-			//if so, error report.
-			auto inserted_pair = texturemap->insert(make_pair(texture, new TextureComponent(texture)));
-			if (!inserted_pair.second)
+			try 
 			{
-				cerr << "Duplicate key in model map" << endl;
+				//slightly unsafe, no guarantee key is unique
+				//might not insert, and memory leak ensue
+				//if so, error report.
+				auto inserted_pair = texturemap->insert(make_pair(texture, new TextureComponent(texture)));
+				if (!inserted_pair.second)
+				{
+					cerr << "Duplicate key in model map" << endl;
+				}
+				else
+				{
+					elements.push_back((Component *)inserted_pair.first->second);
+				}
 			}
-			else
+			catch (exception e) 
 			{
-				elements.push_back((Component *)inserted_pair.first->second);
+				cerr << e.what() << endl;
 			}
 		}
 	}
@@ -297,10 +305,15 @@ void renderScene(void)
 				  0.0, 0.0, 0.0,
 				  0.0f, 1.0f, 0.0f);
 	}
-	float o[4] = { 0.0f, 10.0f, 0.0f, 0.0f };
+
+	float o[4] = { 0.0f, 15.0f, 0.0f, 0.0f };
+	float o2[4] = { 0.0f, -15.0f, 0.0f, 0.0f };
 	float l[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, o);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, l);
+	glLightfv(GL_LIGHT1, GL_POSITION, o2);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, l);
+
 
 	scene->renderTree();
 
@@ -498,7 +511,8 @@ int main(int argc, char **argv)
 	{
 		modelmap = new unordered_map<string, ModelComponent*>(10);
 		texturemap = new unordered_map<string, TextureComponent*>(10);
-		scene = new SceneTree(argv[1]);
+		
+
 
 		// init GLUT and the window
 		glutInit(&argc, argv);
@@ -506,6 +520,7 @@ int main(int argc, char **argv)
 		glutInitWindowPosition(100, 100);
 		glutInitWindowSize(1024, 768);
 		glutCreateWindow("CG@DI-UM");
+
 
 		// Required callback registry
 		glutDisplayFunc(renderScene);
@@ -519,29 +534,42 @@ int main(int argc, char **argv)
 		glutMouseFunc(processMouseButtons);
 		glutMotionFunc(processMouseMotion);
 
+		glewInit();
+
 		//  OpenGL settings
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHT1);
 
-
-		glewInit();
-		ilInit();
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		
+
+
+
+		//Textures are loaded when the scene is created
+		ilInit();
+		ilEnable(IL_ORIGIN_SET);
+		ilOriginFunc(IL_ORIGIN_UPPER_LEFT);
+
+		scene = new SceneTree(argv[1]);
+
+
 		int model_size = modelmap->size();
 		int tex_size = texturemap->size();
 
 		//initialize enough buffers for models in modelmap
 		//and textures in texturemap
-		GLBuffers = struct gl_buffers(model_size, tex_size);
-		glGenBuffers(model_size, GLBuffers.model_coord_buf);
-		glGenBuffers(model_size, GLBuffers.normals_buf);
-		glGenBuffers(model_size, GLBuffers.tex_coord_buf);
-		glGenBuffers(tex_size, GLBuffers.tex_buf);
+
+		struct gl_buffers buf(model_size, tex_size);
+		GLBuffers = &buf;
+		glGenBuffers(model_size, GLBuffers->model_coord_buf);
+		glGenBuffers(model_size, GLBuffers->normals_buf);
+		glGenBuffers(model_size, GLBuffers->tex_coord_buf);
+		glGenBuffers(tex_size, GLBuffers->tex_buf);
 
 
 		//assign said buffers to every model in modelmap
@@ -641,11 +669,13 @@ ModelComponent::ModelComponent(const char* model) : Component(false), model(mode
 	v_size = stoi(input);
 	vertices = new Vector3D[v_size];
 	normals = new Vector3D[v_size];
+	tex_coords = new Vector2D[v_size];
 	//really unsafe code
 	for(int i=0;i<v_size;i++) 
 	{
-		fp >> vertices[i].x >> vertices[i].y >> vertices[i].z;
-		fp >> normals[i].x >> normals[i].y >> normals[i].z;
+		vertices[i].fillVector(fp);
+		normals[i].fillVector(fp);
+		tex_coords[i].fillVector(fp);
 	}
 	/* debug
 	for (int i = 0; i < v_size; i++) 
@@ -660,11 +690,11 @@ ModelComponent::ModelComponent(const char* model) : Component(false), model(mode
 
 //Constructor for models takes file path in string form, comes from stack so has to be moved to avoid unnecessary second copy.
 //Reads a bunch of vertices, ModelComponent is not grouping
-ModelComponent::ModelComponent(string model) : Component(false), model(move(model))
+ModelComponent::ModelComponent(string path) : Component(false), model(move(path))
 {
 	//open file and populate vertices
 	ifstream fp;
-	fp.open(this->model);
+	fp.open(model);
 	string input;
 	getline(fp, input);
 	v_size = stoi(input);
@@ -692,6 +722,7 @@ ModelComponent::~ModelComponent()
 {
 	delete vertices;
 	delete normals;
+	delete tex_coords;
 }
 
 /*
@@ -714,14 +745,14 @@ void ModelComponent::renderComponent()
 	}
 #else
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.model_coord_buf[bound_buffer_index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->model_coord_buf[bound_buffer_index]);
 	glVertexPointer(3, GL_FLOAT, 0, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.normals_buf[bound_normals_index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->normals_buf[bound_buffer_index]);
 	glNormalPointer(GL_FLOAT, 0, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.tex_coord_buf[bound_normals_index]);
-	glNormalPointer(GL_FLOAT, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->tex_coord_buf[bound_buffer_index]);
+	glTexCoordPointer(2, GL_FLOAT, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, v_size);
 
@@ -738,16 +769,14 @@ void ModelComponent::renderComponent()
 void ModelComponent::assignBuffer(int index)
 {
 	bound_buffer_index = index;
-	bound_normals_index = index;
-	bound_tex_coord_index = index;
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.model_coord_buf[index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->model_coord_buf[index]);
 	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*vertices),vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.normals_buf[index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->normals_buf[index]);
 	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*normals), normals, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers.tex_coord_buf[index]);
+	glBindBuffer(GL_ARRAY_BUFFER, GLBuffers->tex_coord_buf[index]);
 	glBufferData(GL_ARRAY_BUFFER, v_size * sizeof(*tex_coords), tex_coords, GL_STATIC_DRAW);
 
 }
@@ -994,15 +1023,21 @@ void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vecto
 */
 TextureComponent::TextureComponent(string path) : Component(false), texture(move(path))
 {
-	ilEnable(IL_ORIGIN_SET);
-	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
 	ilGenImages(1, &il_index);
 	ilBindImage(il_index);
-	ilLoadImage((ILstring)path.c_str());
-	width = ilGetInteger(IL_IMAGE_WIDTH);
-	height = ilGetInteger(IL_IMAGE_HEIGHT);
-	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-	texData = ilGetData();
+	if(!ilLoadImage((ILstring)texture.c_str())) 
+	{
+		string message("Failed to load Texture: ");
+		message += texture.c_str();
+		throw exception(message.c_str());
+	}
+	else 
+	{
+		width = ilGetInteger(IL_IMAGE_WIDTH);
+		height = ilGetInteger(IL_IMAGE_HEIGHT);
+		ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+		texData = ilGetData();
+	}
 
 }
 
@@ -1013,7 +1048,7 @@ TextureComponent::TextureComponent(string path) : Component(false), texture(move
 */
 void TextureComponent::renderComponent()
 {
-	glBindTexture(GL_TEXTURE_2D, tex_index);
+	glBindTexture(GL_TEXTURE_2D, GLBuffers->tex_buf[tex_index]);
 }
 
 
@@ -1025,7 +1060,7 @@ void TextureComponent::assignBuffer(int index)
 {
 	tex_index = index;
 
-	glBindTexture(GL_TEXTURE_2D, GLBuffers.tex_coord_buf[tex_index]);
+	glBindTexture(GL_TEXTURE_2D, GLBuffers->tex_buf[tex_index]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 

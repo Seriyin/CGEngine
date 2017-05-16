@@ -96,8 +96,7 @@ class ModelComponent : public Component
 {
 	private:
 		string model;
-		int bound_buffer_index, bound_normals_index;
-		int bound_tex_coord_index;
+		int bound_buffer_index;
 
 		//Use as a giant pile of vertices you go through as an array
 		int v_size;

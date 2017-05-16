@@ -1,0 +1,56 @@
+<scene>
+  <group>
+    <translate X="0" Y="0" Z="5" />
+    <group>
+      <translate time="10">
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+        <point X="8" Y="8" Z="0" />
+        <point X="0" Y="0" Z="0" />
+        <point X="8" Y="-8" Z="0" />
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+      </translate>
+      <rotate time="3" axisX="1" axisY="0" axisZ="0" />
+      <models>
+        <model file="teapot.3d" texture="textures\comet.png" ambiR="1.0" ambiG="1.0" ambiB="1.0" />
+      </models>
+    </group>   
+  </group>	 
+  <group>
+    <translate X="0" Y="0" Z="-5" />
+    <group>
+      <translate time="10">
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+        <point X="8" Y="8" Z="0" />
+        <point X="0" Y="0" Z="0" />
+        <point X="8" Y="-8" Z="0" />
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+      </translate>
+      <rotate time="2" axisX="0" axisY="1" axisZ="1" />
+      <models>
+        <model file="teapot.3d" texture="textures\2k_mars.jpg"/>
+      </models>
+    </group>
+  </group>
+  <group>
+    <translate X="0" Y="0" Z="-10" />
+    <group>
+      <translate time="10">
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+        <point X="8" Y="8" Z="0" />
+        <point X="0" Y="0" Z="0" />
+        <point X="8" Y="-8" Z="0" />
+        <point X="-8" Y="-8" Z="0" />
+        <point X="-8" Y="8" Z="0" />
+      </translate>
+      <rotate time="0.5" axisX="1" axisY="0" axisZ="0" />
+      <models>
+        <model file="teapot.3d" texture="textures\2k_sun.jpg"/>
+      </models>
+    </group>
+  </group>
+</scene>

@@ -3,6 +3,7 @@
 
 void inline generateVerticesForPatch(
 	Vector3D quad_result[8],
+	Vector2D quad_tex_coord[4],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
 	int tesselation,
@@ -12,6 +13,7 @@ void inline generateVerticesForPatch(
 
 void inline calculateQuad(
 	Vector3D quad_result[8],
+	Vector2D quad_tex_coord[4],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
 	float *u,
@@ -37,25 +39,35 @@ void generatePlane(ofstream& fp, float length, float width)
 
 	//glBegin(GL_TRIANGLES);
 	//fp <<(pos_x, 0, neg_z);
-	fp << pos_x << " " << 0 << " " << neg_z;
-	fp << " ";
+	fp << pos_x << " " << 0 << " " << neg_z << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 1 << " " << 0 << " ";
 	//fp <<(neg_x, 0, neg_z);
-	fp << neg_x << " " << 0 << " " << neg_z;
-	fp << " ";
+	fp << neg_x << " " << 0 << " " << neg_z << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 0 << " " << 0 << " ";
 	//fp <<(pos_x, 0, pos_z);
 	fp << pos_x << " " << 0 << " " << pos_z;
 	fp << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 1 << " " << 1 << " ";
 	//glEnd();
 
 	//glBegin(GL_TRIANGLES);
 	//fp <<(pos_x, 0, pos_z);
 	fp << pos_x << " " << 0 << " " << pos_z;
 	fp << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 1 << " " << 1 << " ";
 	//fp <<(neg_x, 0, neg_z);
 	fp << neg_x << " " << 0 << " " << neg_z;
 	fp << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 0 << " " << 0 << " ";
 	//fp <<(neg_x, 0, pos_z);
-	fp << neg_x << " " << 0 << " " << pos_z;
+	fp << neg_x << " " << 0 << " " << pos_z << " ";
+	fp << 0 << " " << 1 << " " << 0 << " ";
+	fp << 0 << " " << 1 << " ";
 	//glEnd();
 }
 
@@ -229,28 +241,33 @@ void generateSphere(ofstream& fp, float radius, int slices, int stacks)
 			alpha4 = (j + 1)*(M_PI / (stacks)); // angle next loop's vert makes with y axis
 
 			//quad's left triangle
-			//format vertex, normal, vertex, normal, vertex, normal
+			//format vertex, normal, tex_coords, vertex, normal, tex_coords...
 
 			fp << l*sin(alpha) << " " << radius*sin(alpha3) << " " << l*cos(alpha) << " ";			
 			fp << l*sin(alpha)/radius << " " << sin(alpha3) << " " << l*cos(alpha)/radius << " ";
-
+			fp << i/slices << " " << (j+stacks/2.0f)/stacks << " ";
 
 			fp << l*sin(alpha2) << " " << radius*sin(alpha3) << " " << l*cos(alpha2) << " ";
 			fp << l*sin(alpha2)/radius << " " << sin(alpha3) << " " << l*cos(alpha2) / radius << " ";
+			fp << (i + 1)/slices << " " << (j + stacks / 2.0f) / stacks << " ";
 
 			fp << lu*sin(alpha) << " " << radius*sin(alpha4) << " " << lu*cos(alpha) << " ";
 			fp << lu*sin(alpha) / radius << " " << sin(alpha4) << " " << lu*cos(alpha) / radius << " ";
+			fp << i/slices << " " << ((j + 1) + stacks / 2.0f) / stacks << " ";
 
 			//quad's right triangle
 
 			fp << l*sin(alpha2) << " " << radius*sin(alpha3) << " " << l*cos(alpha2) << " ";
 			fp << l*sin(alpha2) / radius << " " << sin(alpha3) << " " << l*cos(alpha2) / radius << " ";
+			fp << (i+1)/slices << " " << (j + stacks / 2.0f) / stacks << " ";
 
 			fp << lu*sin(alpha2) << " " << radius*sin(alpha4) << " " << lu*cos(alpha2) << " ";
 			fp << lu*sin(alpha2) / radius << " " << sin(alpha4) << " " << lu*cos(alpha2) / radius << " ";
+			fp << (i+1)/slices << " " << ((j + 1) + stacks / 2.0f) / stacks << " ";
 
 			fp << lu*sin(alpha) << " " << radius*sin(alpha4) << " " << lu*cos(alpha) << " ";
 			fp << lu*sin(alpha) / radius << " " << sin(alpha4) << " " << lu*cos(alpha) / radius << " ";
+			fp << i/slices << " " << ((j + 1) + stacks / 2.0f) / stacks << " ";
 
 			i++;
 		}
@@ -370,35 +387,55 @@ void generateFlatDiscus(ofstream& fp, float inner_radius, float outer_radius,
 
 		//First base triangle facing one way
 		fp << inner_radius*cos(alpha) << " " << 0 << " " << inner_radius*sin(alpha) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 0 << " " << 0 << " ";
+		
 		fp << inner_radius*cos(alpha+beta) << " " << 0 << " " << inner_radius*sin(alpha+beta) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 1 << " " << 0 << " ";
+		
 		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 0 << " " << 1 << " ";
 
 		//First base triangle facing other way
 		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 1 << " " << 0 << " ";
+
 		fp << inner_radius*cos(alpha) << " " << 0 << " " << inner_radius*sin(alpha) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 0 << " " << 0 << " ";
+
 		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 0 << " " << 1 << " ";
 
 		//Second base triangle facing one way
 		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 0 << " " << 1 << " ";
+
 		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 1 << " " << 0 << " ";
+
 		fp << outer_radius*cos(alpha + beta) << " " << 0 << " " << outer_radius*sin(alpha + beta) << " ";
-		fp << 0 << -1 << 0;
+		fp << 0 << " " << -1 << " " << 0 << " ";
+		fp << 1 << " " << 1 << " ";
 
 		//Second base triangle facing other way
 		fp << inner_radius*cos(alpha + beta) << " " << 0 << " " << inner_radius*sin(alpha + beta) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 1 << " " << 0 << " ";
+
 		fp << outer_radius*cos(alpha) << " " << 0 << " " << outer_radius*sin(alpha) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 0 << " " << 1 << " ";
+
 		fp << outer_radius*cos(alpha + beta) << " " << 0 << " " << outer_radius*sin(alpha + beta) << " ";
-		fp << 0 << 1 << 0;
+		fp << 0 << " " << 1 << " " << 0 << " ";
+		fp << 1 << " " << 1 << " ";
 	}
 }
 
@@ -442,6 +479,8 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tesselation)
 	float cur_bezier_ctrls[3][4][4];
 	//4 vertices to build a quad + 4 normals
 	Vector3D quad_result[8];
+	//4 sets of texture coordinates for each quad
+	Vector2D quad_tex_coord[4];
 	//v can be reused as both u and v, needs careful pointer arithmetic
 	float *v = new float[tesselation * 4];
 	float *n = new float[tesselation * 4];
@@ -485,7 +524,7 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tesselation)
 				}
 			}
 		}
-		generateVerticesForPatch(quad_result, cur_bezier_ctrls, bezier, tesselation, v, n, fp);
+		generateVerticesForPatch(quad_result, quad_tex_coord, cur_bezier_ctrls, bezier, tesselation, v, n, fp);
 	}
 	delete v;
 	delete n;
@@ -499,6 +538,7 @@ void generateFromPatches(ofstream & fp, ifstream & patchfile, int tesselation)
 //Will use shitty no memory algorithm. Will compute quad by quad
 //And so recompute half the vertexes every row.
 void inline generateVerticesForPatch(Vector3D quad_result[8],
+									 Vector2D quad_tex_coord[4],
 									 float cur_bezier_ctrls[][4][4],
 									 int bezier[][4],
 									 int tesselation,
@@ -510,19 +550,21 @@ void inline generateVerticesForPatch(Vector3D quad_result[8],
 	{
 		for (int j = 0; j < (tesselation - 1); j++)
 		{
-			calculateQuad(quad_result, cur_bezier_ctrls, bezier, v + (i * 4), v + (j * 4), n + (i * 4), n + (j * 4), tesselation);
+			calculateQuad(quad_result, quad_tex_coord, cur_bezier_ctrls, bezier, v + (i * 4), v + (j * 4), n + (i * 4), n + (j * 4), tesselation);
 			//Triangle from lower left corner to upper right corner to upper left corner
-			//In vertex, normal, vertex, normal, vertex, normal format
+			//In vertex, normal, tex_coords, vertex, normal, tex_coords format
 			for (int k = 2; k >= 0; k--)
 			{
 				quad_result[k].printVector(fp);
 				quad_result[k + 4].printVector(fp);
+				quad_tex_coord[k].printVector(fp);
 			}
 			//Triangle from upper right corner to lower left corner to lower right corner
 			for (int k = 1; k<4; k++)
 			{
 				quad_result[k].printVector(fp);
 				quad_result[k + 4].printVector(fp);
+				quad_tex_coord[k].printVector(fp);
 			}
 
 		}
@@ -532,7 +574,9 @@ void inline generateVerticesForPatch(Vector3D quad_result[8],
 //Calculates all 4 vertices for a quad for one step in the tesselation,
 //followed by calculating all 4 normals for said quad.
 //Stores them into quad_result.
-void inline calculateQuad(Vector3D quad_result[8],
+void inline calculateQuad(
+	Vector3D quad_result[8],
+	Vector2D quad_tex_coord[4],
 	float cur_bezier_ctrls[][4][4],
 	int bezier[][4],
 	float *u,
@@ -555,6 +599,15 @@ void inline calculateQuad(Vector3D quad_result[8],
 		quad_result[5] = normalize(crossProduct(multBezier(nu + 4, cur_bezier_ctrls, bezier, v), multBezier(u + 4, cur_bezier_ctrls, bezier, nv)));
 		quad_result[6] = normalize(crossProduct(multBezier(nu, cur_bezier_ctrls, bezier, v + 4), multBezier(u, cur_bezier_ctrls, bezier, nv + 4)));
 		quad_result[7] = normalize(crossProduct(multBezier(nu + 4, cur_bezier_ctrls, bezier, v + 4), multBezier(u + 4, cur_bezier_ctrls, bezier, nv + 4)));
+	}
+
+	//Texture Coordinates
+	//The step from 0->1 is in the 3rd coord of the u and v vectors
+	{
+		quad_tex_coord[0] = Vector2D(u[2], v[2]);
+		quad_tex_coord[1] = Vector2D(u[6], v[2]);
+		quad_tex_coord[2] = Vector2D(u[2], v[6]);
+		quad_tex_coord[3] = Vector2D(u[6], v[6]);
 	}
 }
 

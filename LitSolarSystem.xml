@@ -1,4 +1,12 @@
 <scene>
+  <global_lights>
+    <light type="POINT" posX="0" posY="7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="POINT" posX="0" posY="-7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="POINT" posX="0" posY="0" posZ="-7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="POINT" posX="0" posY="0" posZ="7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="POINT" posX="7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="POINT" posX="-7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+  </global_lights>
   <group>
     <scale X='6.957' Y='6.957' Z='6.957' />
     <models>

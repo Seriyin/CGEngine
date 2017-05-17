@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#define MAX_SPEED 20
 
 void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vector3D &p3, float *res);
 
@@ -18,19 +19,8 @@ static SceneTree *scene;
 static unordered_map<string, ModelComponent*> *modelmap;
 static unordered_map<string, TextureComponent*> *texturemap;
 static float timestamp;
-
-static struct material_defaults 
-{
-	float diffuse[4], specular[4], emissive[4], ambient[4], shininess;
-	
-	material_defaults() : 
-		diffuse{ 0.8f, 0.8f, 0.8f, 1.0f },
-		specular{ 0.0f, 0.0f, 0.0f, 1.0f },
-		emissive{ 0.0f, 0.0f, 0.0f, 1.0f },
-		ambient{ 0.2f, 0.2f, 0.2f, 1.0f },
-		shininess(0.0f) {}
-
-} MaterialDefaults;
+static MaterialComponent MaterialDefaults;
+static LightComponent LightDefaults;
 
 static struct gl_buffers
 {
@@ -67,6 +57,8 @@ static float catmull_rom[4][4] =
 	{0,1,0,0}
 };
 
+static int current_light_index=0;
+static vector<int> *current_lights_to_disable = nullptr;
 
 /*
 	Assigns buffers to every model component in model map.
@@ -89,6 +81,116 @@ void assignBuffers()
 	}
 
 }
+
+
+/*
+	Stores lights into elements to be actived, and stores which lights to be deactivated in a stack.
+	Can be called in a way which resets lights, in case they should be immediatly disabled following
+	the drawing of the models, or keeping the lights active for all subsequent groups.
+	This is useful to allow static lights before activating the camera.
+*/
+void processLightsIntoVector(vector<int> lightsToDisable,vector<Component *> &elements, 
+							 XMLElement *current, bool bResetLights) 
+{
+	int start_lights;
+	//ignores empty light tags
+	if (!current->NoChildren())
+	{
+		current = current->FirstChildElement("light");
+		while (current && !strcmp(current->Value(), "light") && current_light_index<GL_MAX_LIGHTS)
+		{
+			start_lights = current_light_index;
+			float diffuse[4], specular[4], pos[4], ambient[4];
+			if (current->Attribute("diffR") || current->Attribute("diffG") ||
+				current->Attribute("diffB") || current->Attribute("diffA"))
+			{
+				diffuse[0] = current->FloatAttribute("diffR");
+				diffuse[1] = current->FloatAttribute("diffG");
+				diffuse[2] = current->FloatAttribute("diffB");
+				diffuse[3] = current->FloatAttribute("diffA");
+			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					diffuse[i] = LightDefaults.diffuse[i];
+				}
+			}
+			if (current->Attribute("specR") || current->Attribute("specG") ||
+				current->Attribute("specB") || current->Attribute("specA"))
+			{
+				specular[0] = current->FloatAttribute("specR");
+				specular[1] = current->FloatAttribute("specG");
+				specular[2] = current->FloatAttribute("specB");
+				specular[3] = current->FloatAttribute("specA");
+			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					specular[i] = LightDefaults.specular[i];
+				}
+			}
+			if (current->Attribute("posX") || current->Attribute("posY") ||
+				current->Attribute("posZ") || current->Attribute("type"))
+			{
+				pos[0] = current->FloatAttribute("posX");
+				pos[1] = current->FloatAttribute("posY");
+				pos[2] = current->FloatAttribute("posZ");
+				const char *type = current->Attribute("type");
+				pos[3] = LightDefaults.pos[3];
+				if (type)
+				{
+					if (!strcmp(type, "POINT"))
+					{
+						pos[3] = 0;
+					}
+					else if(!strcmp(type, "DIRECTIONAL")) 
+					{
+						pos[3] = 1;
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					pos[i] = LightDefaults.pos[i];
+				}
+			}
+			if (current->Attribute("ambiR") || current->Attribute("ambiG") ||
+				current->Attribute("ambiB") || current->Attribute("ambiA"))
+			{
+				ambient[0] = current->FloatAttribute("ambiR");
+				ambient[1] = current->FloatAttribute("ambiG");
+				ambient[2] = current->FloatAttribute("ambiB");
+				ambient[3] = current->FloatAttribute("ambiA");
+			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					ambient[i] = LightDefaults.ambient[i];
+				}
+			}
+			elements.push_back((Component *) new LightComponent(pos, diffuse, 
+																specular, ambient,
+																current_light_index));
+			lightsToDisable.push_back(current_light_index++);
+			current = current->NextSiblingElement();
+		}
+		if (current)
+		{
+			cerr << "Tag other than light in lights, skipping rest of lights..." << endl;
+		}
+	}
+	if (!bResetLights) 
+	{
+		current_light_index = start_lights;
+	}
+
+}
+
 
 /*
 	Checks for material attributes to build a material component.
@@ -219,7 +321,7 @@ void processModelAttributes(vector<Component*> &elements,XMLElement *current)
 */
 void processModelsIntoVector(vector<Component*> &elements,XMLElement *current) 
 {
-	//ignora modelos vazios
+	//ignores empty models tags
 	if (!current->NoChildren())
 	{
 		current = current->FirstChildElement("model");
@@ -306,15 +408,6 @@ void renderScene(void)
 				  0.0f, 1.0f, 0.0f);
 	}
 
-	float o[4] = { 0.0f, 15.0f, 0.0f, 0.0f };
-	float o2[4] = { 0.0f, -15.0f, 0.0f, 0.0f };
-	float l[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, o);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, l);
-	glLightfv(GL_LIGHT1, GL_POSITION, o2);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, l);
-
-
 	scene->renderTree();
 
 	// End of frame
@@ -365,9 +458,15 @@ void processKeys(unsigned char key, int xx, int yy)
 				 fpc.camZ += fpc.k*rz;
 				 
 				 break;
-		case '+':fpc.k *= 2;
+		case '+':if (fpc.k < MAX_SPEED) 
+				 { 
+					 fpc.k *= 1.2; 
+				 }
 				 break;
-		case '-':fpc.k /= 2; 
+		case '-':if (fpc.k < MAX_SPEED)
+				 {
+					 fpc.k /= 1.2;
+				 }
 				 break;
 		default: break;
 		}
@@ -541,8 +640,6 @@ int main(int argc, char **argv)
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_LIGHT0);
-		glEnable(GL_LIGHT1);
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
@@ -591,7 +688,16 @@ int main(int argc, char **argv)
 
 
 
-
+void disablePreviousLights() 
+{
+	if (current_lights_to_disable)
+	{
+		for each(auto var in (*current_lights_to_disable))
+		{
+			glDisable(GL_LIGHT0 + var);
+		}
+	}
+}
 
 
 //Load from XML file and construct SceneTree
@@ -600,6 +706,8 @@ SceneTree::SceneTree(const char *file)
 {
 	elements.reserve(10);
 	bool bFoundModels = false;
+	bool bFoundGlobalLights = false;
+	bool bFoundStaticLights = false;
 	XMLDocument x;
 	if (x.LoadFile(file) == XML_SUCCESS)
 	{
@@ -623,7 +731,21 @@ SceneTree::SceneTree(const char *file)
 					//Only one models tag processed per group/scene.
 					bFoundModels = true;
 				}
-				else 
+				//Found a lights tag, everything after should be light tags.
+				else if (!bFoundGlobalLights && !bFoundModels && !strcmp(current->Value(), "global_lights"))
+				{
+					processLightsIntoVector(globalLightsToDisable, elements, current, false);
+					//Only one models tag processed per group/scene.
+					bFoundGlobalLights = true;
+				}
+				//Found a models tag, everything after should be model tags.
+				else if (!bFoundStaticLights && !bFoundModels && !strcmp(current->Value(), "static_lights"))
+				{
+					processLightsIntoVector(staticLightsToDisable, elements, current, false);
+					//Only one models tag processed per group/scene.
+					bFoundStaticLights = true;
+				}
+				else
 				{
 					cerr << "Unrecognized tag in scene, skipping tag..." << endl;
 				}
@@ -651,6 +773,7 @@ void SceneTree::renderTree()
 	{
 		var->renderComponent();
 	}
+	disablePreviousLights();
 }
 
 
@@ -816,6 +939,7 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 		bool bFoundTranslate = false;
 		bool bFoundScale = false;
 		bool bFoundRotate = false;
+		bool bFoundLights = false;
 		//current comes in at the group tag.
 		current = current->FirstChildElement();
 
@@ -825,26 +949,26 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 			{
 				if (!current->NoChildren())
 				{
-					if (animation.getAnimFromPoints(current->FloatAttribute("time", 0.0f),
-						current->FirstChildElement())) 
+					if (animation.getAnimFromPoints(current->FloatAttribute("time"),
+													current->FirstChildElement())) 
 					{
 						order_vector[count++] = ANT;
 					}
 				}
 				else
 				{
-					translate = Vector3D(current->FloatAttribute("X", 0.0f),
-										 current->FloatAttribute("Y", 0.0f),
-										 current->FloatAttribute("Z", 0.0f));
+					translate = Vector3D(current->FloatAttribute("X"),
+										 current->FloatAttribute("Y"),
+										 current->FloatAttribute("Z"));
 					order_vector[count++] = TR;
 				}
 				bFoundTranslate = true;
 			}
 			else if (!bFoundRotate && !strcmp(current->Value(), "rotate"))
 			{
-				rotate = Vector3D(current->FloatAttribute("axisX", 0.0f),
-								  current->FloatAttribute("axisY", 0.0f),
-								  current->FloatAttribute("axisZ", 0.0f));
+				rotate = Vector3D(current->FloatAttribute("axisX"),
+								  current->FloatAttribute("axisY"),
+								  current->FloatAttribute("axisZ"));
 				float rotate_time = current->FloatAttribute("time", -1.0f);
 				if (rotate_time > -0.000001f) 
 				{
@@ -853,16 +977,16 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 				}
 				else 
 				{
-					rtt_angortime = current->FloatAttribute("angle", 0.0f);
+					rtt_angortime = current->FloatAttribute("angle");
 					order_vector[count++] = RT;
 				}
 				bFoundRotate = true;
 			}
 			else if (!bFoundScale && !strcmp(current->Value(), "scale"))
 			{
-				scale = Vector3D(current->FloatAttribute("X", 0.0f),
-								 current->FloatAttribute("Y", 0.0f),
-								 current->FloatAttribute("Z", 0.0f));
+				scale = Vector3D(current->FloatAttribute("X"),
+								 current->FloatAttribute("Y"),
+								 current->FloatAttribute("Z"));
 				bFoundScale = true;
 				order_vector[count++] = SC;
 			}
@@ -871,6 +995,12 @@ GroupComponent::GroupComponent(XMLElement *current) : Component(true), order_vec
 				processModelsIntoVector(elements, current);
 				//Only one models tag processed per group/scene.
 				bFoundModels = true;
+			}
+			else if (!bFoundLights && !bFoundModels && !strcmp(current->Value(), "lights"))
+			{
+				processLightsIntoVector(lightsToDisable, elements, current, true);
+				//Only one lights tag processed per group/scene.
+				bFoundLights = true;
 			}
 			else if (!strcmp(current->Value(), "group"))
 			{
@@ -905,6 +1035,8 @@ GroupComponent::~GroupComponent()
 */
 void GroupComponent::renderComponent()
 {
+	//Disable previous groups' lights
+	disablePreviousLights();
 	glPushMatrix();
 	for (int i=0; order_vector[i] != ID && i < 3; i++) 
 	{
@@ -923,6 +1055,8 @@ void GroupComponent::renderComponent()
 			default: break;
 		}
 	}
+	//Set current lights to be this groups lights
+	current_lights_to_disable = &lightsToDisable;
 	for each (Component *var in elements)
 	{
 		var->renderComponent();
@@ -953,12 +1087,9 @@ bool AnimationComponent::getAnimFromPoints(float time, XMLElement * current)
 	curve_time = time;
 	for (; current; current = current->NextSiblingElement())
 	{
-		catmull_points.push_back(
-			Vector3D(current->FloatAttribute("X", 0.0f),
-					 current->FloatAttribute("Y", 0.0f),
-					 current->FloatAttribute("Z", 0.0f)
-					)
-							  );
+		catmull_points.push_back(Vector3D(current->FloatAttribute("X"),
+										  current->FloatAttribute("Y"),
+										  current->FloatAttribute("Z")));
 	}
 	if (catmull_points.size() >= 4) 
 	{
@@ -1076,11 +1207,23 @@ void TextureComponent::assignBuffer(int index)
 
 
 /*
+	Constructor for default OpenGL Material.
+*/
+MaterialComponent::MaterialComponent() : 
+	Component(false),
+	diffuse{ 0.8f, 0.8f, 0.8f, 1.0f }, 
+	specular{ 0.0f, 0.0f, 0.0f, 1.0f }, 
+	emissive{ 0.0f, 0.0f, 0.0f, 1.0f },
+	ambient{ 0.2f, 0.2f, 0.2f, 1.0f },
+	shininess(0.0f) {}
+
+/*
 	Constructor for MaterialComponent with all parameters, assumes no null vectors,
 	non-existant attributes are assumed to be substituted by default OpenGL parameters
 	prior to construction.
 */
-MaterialComponent::MaterialComponent(float *RGB, float *specular, float *emissive, float *ambient, float shininess) :
+MaterialComponent::MaterialComponent(float *RGB, float *specular, float *emissive,
+									 float *ambient, float shininess) :
 	Component(false), 
 	diffuse{ RGB[0], RGB[1], RGB[2], RGB[3] },
 	specular{ specular[0], specular[1], specular[2], specular[3] },
@@ -1089,6 +1232,7 @@ MaterialComponent::MaterialComponent(float *RGB, float *specular, float *emissiv
 	shininess( shininess) {}
 
 
+//Rendering just sets the material with needed properties.
 void MaterialComponent::renderComponent()
 {
 	glMaterialfv(GL_FRONT, GL_EMISSION, emissive);
@@ -1096,4 +1240,43 @@ void MaterialComponent::renderComponent()
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
 	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+}
+
+
+
+/*
+	Constructor for default OpenGL Lights for i>0 
+	(default light0 is different and is white, centered and point)
+*/
+LightComponent::LightComponent() :
+	Component(false),
+	pos{ 0, 0, 0, 0 },
+	diffuse{ 0, 0, 0, 0 },
+	specular{ 0, 0, 0, 0 },
+	ambient{ 0, 0, 0, 1 },
+	light_index(-1) {}
+
+/*
+	Constructor for LightComponent with all parameters, assumes no null vectors,
+	non-existant attributes are assumed to be substituted by default OpenGL parameters
+	prior to construction.
+*/
+LightComponent::LightComponent(float * pos, float * diffuse, 
+							   float * specular, float * ambient, int index) :
+	Component(false),
+	pos{ pos[0],pos[1],pos[2],pos[3] },
+	diffuse{ diffuse[0],diffuse[1],diffuse[2],diffuse[3] },
+	specular{ specular[0],specular[1], specular[2], specular[3] },
+	ambient{ ambient[0],ambient[1], ambient[2], ambient[3] },
+	light_index(index) {}
+
+
+//Rendering just sets the light with needed properties.
+void LightComponent::renderComponent()
+{
+	glEnable(GL_LIGHT0 + light_index);
+	glLightfv(GL_LIGHT0 + light_index, GL_POSITION, pos);
+	glLightfv(GL_LIGHT0 + light_index, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0 + light_index, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT0 + light_index, GL_DIFFUSE, diffuse);
 }

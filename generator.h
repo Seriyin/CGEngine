@@ -5,7 +5,16 @@
 #include <math.h>
 #define TOL 10E-6
 
-using namespace std;
+using std::ofstream;
+using std::ifstream;
+using std::endl;
+using std::cerr;
+using std::invalid_argument;
+using std::stol;
+using std::stof;
+using std::stoi;
+using std::ios;
+
 void generatePlane(ofstream& fp, float length, float width);
 void generateBox(ofstream& fp, float length, float height, float width, int divisions);
 void generateBox(ofstream& fp, float length, float height, float width);

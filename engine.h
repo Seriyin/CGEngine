@@ -21,7 +21,15 @@
 
 #define ANG2RAD M_PI/180.0
 
-using namespace std;
+using std::vector;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+using std::unordered_map;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::exception;
 using namespace tinyxml2;
 
 class SceneTree;
@@ -68,6 +76,7 @@ class SceneTree
 {
 	private:
 		vector<Component *> elements;
+		vector<int> staticLightsToDisable, globalLightsToDisable;
 			
 	public:
 		//Constructor
@@ -137,6 +146,7 @@ private:
 	Vector3D translate;
 	Vector3D scale;
 	Vector3D rotate;
+	vector<int> lightsToDisable;
 	//rtt_angortime can function to store the rotation time for a 360º rotation
 	//or a fixed rotation angle
 	float rtt_angortime;
@@ -180,6 +190,8 @@ public :
 
 class MaterialComponent : public Component
 {
+	friend void processModelAttributes(vector<Component *>&elements, XMLElement *current);
+
 	private:
 		float diffuse[4];
 		float ambient[4];
@@ -188,8 +200,29 @@ class MaterialComponent : public Component
 		float shininess;
 
 	public:
+		MaterialComponent();
 		MaterialComponent(float *RGB, float *specular, float *emissive, float *ambient, float shininess);
 
 		void renderComponent();
 };
 
+class LightComponent : public Component
+{
+	friend void processLightsIntoVector(vector<int> lightsToDisable, vector<Component *>&elements,
+										XMLElement *current, bool bResetLights);
+
+	private:
+		float pos[4];
+		float diffuse[4];
+		float specular[4];
+		float ambient[4];
+
+		//It is always the case that GL_LIGHTi = GL_LIGHT0+i.
+		int light_index;
+
+	public:
+		LightComponent();
+		LightComponent(float *pos,float *diffuse, float *specular, float *ambient, int index);
+
+		void renderComponent();
+};

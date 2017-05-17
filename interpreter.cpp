@@ -5,6 +5,13 @@
 #include <iostream>
 #include "generator.h"
 
+using std::invalid_argument;
+using std::stol;
+using std::stof;
+using std::stoi;
+using std::ios;
+using std::cerr;
+
 
 int main(int argc, char* argv[]){
 

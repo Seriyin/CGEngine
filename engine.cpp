@@ -2,6 +2,13 @@
 
 #define MAX_SPEED 20
 
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::exception;
+using std::ifstream;
+
+
 void getCatmullRomPoint(float t, Vector3D &p0, Vector3D &p1, Vector3D &p2, Vector3D &p3, float *res);
 
 

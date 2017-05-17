@@ -22,14 +22,8 @@
 #define ANG2RAD M_PI/180.0
 
 using std::vector;
-using std::ifstream;
-using std::ofstream;
 using std::string;
 using std::unordered_map;
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::exception;
 using namespace tinyxml2;
 
 class SceneTree;

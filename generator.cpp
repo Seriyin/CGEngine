@@ -1,6 +1,9 @@
 #include "generator.h"
 #include "VectorMath.h"
 
+using std::endl;
+
+
 void inline generateVerticesForPatch(
 	Vector3D quad_result[8],
 	Vector2D quad_tex_coord[4],

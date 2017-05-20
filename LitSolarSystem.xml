@@ -1,11 +1,11 @@
 <scene>
   <global_lights>
-    <light type="POINT" posX="0" posY="7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
-    <light type="POINT" posX="0" posY="-7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
-    <light type="POINT" posX="0" posY="0" posZ="-7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
-    <light type="POINT" posX="0" posY="0" posZ="7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
-    <light type="POINT" posX="7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
-    <light type="POINT" posX="-7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="0" posY="7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="0" posY="-7" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="0" posY="0" posZ="-7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="0" posY="0" posZ="7" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
+    <light type="DIRECTIONAL" posX="-7" posY="0" posZ="0" diffR="1" diffG="1" diffB="1" specR="1" specG="1" specB="1"/>
   </global_lights>
   <group>
     <scale X='6.957' Y='6.957' Z='6.957' />
@@ -39,6 +39,7 @@
       <point X='0' Y='0' Z='12.5657' />
       <point X='2.5586' Y='0' Z='11.9197' />
     </translate>
+    <rotate time='5.87' X='0' Y='1' Z='0' />
     <scale X='0.02439' Y='0.02439' Z='0.02439' />
     <models>
       <model file="sphere.3d" texture="textures\2k_mercury.jpg"/>
@@ -70,6 +71,7 @@
       <point X='0' Y='0' Z='16.341' />
       <point X='5.096' Y='0' Z='15.5431' />
     </translate>
+    <rotate time='24.3' X='0' Y='1' Z='0' />
     <scale X='0.06052' Y='0.06052' Z='0.06052' />
     <models>
       <model file="sphere.3d" texture="textures\2k_venus_atmosphere.jpg"/>
@@ -101,6 +103,7 @@
       <point X='0' Y='0' Z='22.8012' />
       <point X='6.8722' Y='0' Z='21.6331' />
     </translate>
+    <rotate time='1' X='0' Y='1' Z='0' />
     <group>
       <scale X='0.06378' Y='0.06378' Z='0.06378' />
       <models>
@@ -132,6 +135,7 @@
         <point X='0' Y='0' Z='0.10205' />
         <point X='0.03153' Y='0' Z='0.09706' />
       </translate>
+      <rotate time='2.73217' X='0' Y='1' Z='0' />
       <scale X='0.01737' Y='0.01737' Z='0.01737' />
       <models>
         <model file="sphere.3d" texture="textures\2k_moon.jpg"/>
@@ -164,6 +168,7 @@
       <point X='0' Y='0' Z='37.3697' />
       <point X='9.5764' Y='0' Z='35.4216' />
     </translate>
+    <rotate time='1.026' X='0' Y='1' Z='0' />
     <scale X='0.03393' Y='0.03393' Z='0.03393' />
     <models>
       <model file="sphere.3d" texture="textures\2k_mars.jpg"/>
@@ -195,6 +200,7 @@
       <point X='0' Y='0' Z='122.5129' />
       <point X='34.3239' Y='0' Z='116.2467' />
     </translate>
+    <rotate time='4.1' X='0' Y='1' Z='0' />
     <scale X='0.71398' Y='0.71398' Z='0.71398' />
     <models>
       <model file="sphere.3d" texture="textures\2k_jupiter.jpg"/>
@@ -226,6 +232,7 @@
       <point X='0' Y='0' Z='227.184' />
       <point X='62.6916' Y='0' Z='215.3872' />
     </translate>
+    <rotate time='4.25' X='0' Y='1' Z='0' />
     <group>
       <scale X='0.60330' Y='0.60330' Z='0.60330' />
       <models>
@@ -265,6 +272,7 @@
       <point X='0' Y='0' Z='454.5981' />
       <point X='127.0657' Y='0' Z='431.4713' />
     </translate>
+    <rotate time='7.4583' X='0' Y='1' Z='0' />
     <scale X='0.25559' Y='0.25559' Z='0.25559' />
     <models>
       <model file="sphere.3d" texture="textures\2k_uranus.jpg"/>
@@ -296,6 +304,7 @@
       <point X='0' Y='0' Z='628.8872' />
       <point X='179.0956' Y='0' Z='597.2582' />
     </translate>
+    <rotate time='7.9583' X='0' Y='1' Z='0' />
     <scale X='0.24300' Y='0.24300' Z='0.24300' />
     <models>
       <model file="sphere.3d" texture="textures\2k_neptune.jpg"/>
@@ -327,6 +336,7 @@
       <point X='0' Y='0' Z='1106.1327' />
       <point X='205.6561' Y='0' Z='1042.803' />
     </translate>
+    <rotate time='6.39' X='0' Y='1' Z='0' />
     <scale X='0.01137' Y='0.01137' Z='0.01137' />
     <models>
       <model file="sphere.3d" texture="textures\2k_pluto.jpg"/>
@@ -359,6 +369,7 @@
       <point X='-27.5367' Y='23.7357' Z='7.5254' />
     </translate>
     <scale X='0.01137' Y='0.01137' Z='0.01137' />
+    <rotate time='2.39' X='1' Y='1' Z='1' />
     <models>
       <model file="teapot.3d" texture="textures\comet.png"/>
     </models>

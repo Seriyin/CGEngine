@@ -104,9 +104,9 @@ void processLightsIntoVector(vector<int> lightsToDisable,vector<Component *> &el
 	if (!current->NoChildren())
 	{
 		current = current->FirstChildElement("light");
+		start_lights = current_light_index;
 		while (current && !strcmp(current->Value(), "light") && current_light_index<GL_MAX_LIGHTS)
 		{
-			start_lights = current_light_index;
 			float diffuse[4], specular[4], pos[4], ambient[4];
 			if (current->Attribute("diffR") || current->Attribute("diffG") ||
 				current->Attribute("diffB") || current->Attribute("diffA"))
@@ -190,10 +190,10 @@ void processLightsIntoVector(vector<int> lightsToDisable,vector<Component *> &el
 		{
 			cerr << "Tag other than light in lights, skipping rest of lights..." << endl;
 		}
-	}
-	if (!bResetLights) 
-	{
-		current_light_index = start_lights;
+		if (!bResetLights)
+		{
+			current_light_index = start_lights;
+		}
 	}
 
 }
